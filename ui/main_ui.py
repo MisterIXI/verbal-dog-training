@@ -9,9 +9,10 @@ class MainUI(ctk.CTk):
     def __init__(self):
         super().__init__()
         self.setup_main_ui()
-        sr_ui = SR_UI(self)
-        llm_ui = LLM_UI(self)
-        dc_ui = DC_UI(self)
+        shared_dict = {}
+        sr_ui = SR_UI(self, shared_dict)
+        llm_ui = LLM_UI(self, shared_dict)
+        dc_ui = DC_UI(self, shared_dict)
         sr_ui.pack(side=ctk.LEFT, fill=ctk.BOTH, expand=True, padx=5)
         llm_ui.pack(side=ctk.LEFT, fill=ctk.BOTH, expand=True, padx=5)
         dc_ui.pack(side=ctk.LEFT, fill=ctk.BOTH, expand=True, padx=5)
