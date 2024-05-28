@@ -4,3 +4,4 @@ import custom_speech_recognition as sr
 print("Hello World")
 window = ui.MainUI()
 window.mainloop()
+print("Goodbye World")
