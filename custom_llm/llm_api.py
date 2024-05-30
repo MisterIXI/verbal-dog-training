@@ -5,11 +5,11 @@ import threading as th
 
 class LLM_API:
     def __init__(self, print_callback: callable, commands: list[str] = ["platz", "tanzen", "maennchen"], obfuscate_names: bool = True) -> None:
-        self.print_cb = print_callback
+        self.print_callback = print_callback
         self.url = "http://localhost:8080/completion"
         self.obfuscate_names = obfuscate_names
         self.grammar = self.build_grammar(commands, self.obfuscate_names)
-        self.print("Grammar: " + self.grammar)
+        # self.print_cb("Grammar: " + self.grammar)
         self.context = {}
         self.commands = commands
         self.preprompt = self._get_preprompt()
@@ -25,8 +25,8 @@ class LLM_API:
         self.data_ready = th.Event()
         self.prompt_text = ""
 
-    def print(self, text: str):
-        self.print_cb(text)
+    def _print(self, text: str, source: str = "LLM_API", color="white"):
+        self.print_callback(text, source, color)
 
     def build_grammar(self, commands: list[str], obfuscate_names: bool = True) -> str:
         x = "root ::= "
@@ -56,38 +56,54 @@ class LLM_API:
         self.prompt_text = prompt
         self.prompt_event.set()
 
-    def prompt(self, text: str, print_prompt: bool = True):
+    def test_if_running(self) -> bool:
+        payload = self._create_payload("", {}, "test", print_prompt=False)
+        try:
+            response = requests.post(self.url, json=payload)
+        except requests.exceptions.ConnectionError:
+            return False
+        return response.status_code == 200
+
+    def prompt(self):
         self.data_ready.clear()
         self.prompt_event.clear()
+        self._print("Started up and waiting for prompt...")
         while self.is_running:
             self.prompt_event.wait()
             self.prompt_event.clear()
             if not self.is_running:
                 break
+            if self.prompt_text == "":
+                self._print("Prompt text is empty...")
+            else:
+                self._print("Prompt received!")
             self.data_ready.clear()
-            self.print("Prompting with: " + text)
+            self._print("Prompting with: " + self.prompt_text)
             payload = self._create_payload(
-                self.preprompt, self.context, text, print_prompt=print_prompt)
+                self.preprompt, self.context, self.prompt_text, print_prompt=True)
             start_time = time.time()
-            response = requests.post(self.url, json=payload)
-            responses = []
-            for i in range(1):
+            try:
                 response = requests.post(self.url, json=payload)
-                responses.append(response)
+            except requests.exceptions.ConnectionError:
+                # when the server is not running
+                self._print("Could not query the LLM server. Is it running?")
+                self.data = None
+                self.data_ready.set()
+                continue
             # print("Responses: " + str([r.json()["content"] for r in responses]))
             time_taken = time.time() - start_time
-            self.print_cb(f"Time taken: {round(time_taken, 3)}")
+            self._print(f"Time taken: {round(time_taken, 3)}")
             if response.status_code == 200:
                 response_json = response.json()
                 chosen_command = response_json["content"]
                 if self.obfuscate_names:
                     chosen_command += " (de-obfuscated: " + \
                         self.commands[int(chosen_command[-1]) - 1] + ")"
-                self.print_cb(f"Response: {chosen_command}")
+                self._print(f"Response: {chosen_command}")
                 self.data = response_json["content"]
                 self.data_ready.set()
             else:
-                self.print_cb(f"Request failed...")
+                self._print(f"Request failed...")
                 self.data = None
                 self.data_ready.set()
                 raise ValueError("Request failed: " + response.text)

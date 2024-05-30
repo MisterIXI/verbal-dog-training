@@ -4,7 +4,10 @@ from .dog_control_ui import DC_UI
 from .SR_ui import SR_UI
 from .LLM_ui import LLM_UI
 from custom_speech_recognition import speech_recognition as sr
-
+from training.dog_trainer import dog_trainer, t_state
+import time
+import datetime
+import threading as th
 
 # import TKinter as tk
 class MainUI(ctk.CTk):
@@ -16,8 +19,12 @@ class MainUI(ctk.CTk):
 
     def __init__(self):
         super().__init__()
+        self.dog_trainer = None
         self.setup_main_ui()
         shared_dict = {}
+        self.printed_output = []
+        self._epoch = time.time()
+        self.output = ""
 
     def setup_main_ui(self):
         # change nicegui background color to hexcode "282828"
@@ -56,7 +63,19 @@ class MainUI(ctk.CTk):
         sr_mic_label.grid(row=2, column=0, sticky="e", padx=self.PAD_SMALL, pady=self.PAD_SMALL)
         self.dd_mic = ctk.CTkOptionMenu(input_frame, values=["Default", "None"], font=("Arial", self.FONT_SIZE),width=self.DD_WIDTH)
         self.dd_mic.grid(row=2, column=1, sticky="w", padx=self.PAD_SMALL)
-
+        # buttons init
+        self.btn_load_step = ctk.CTkButton(input_frame, text="Load Trainer", font=("Arial", self.FONT_SIZE), command=self.init_trainer)
+        self.btn_load_step.grid(row=3, column=0, pady=self.PAD_SMALL,padx=self.PAD_SMALL, sticky="e")
+        self.ckb_auto_mode = ctk.CTkCheckBox(input_frame, text="Auto Mode", font=("Arial", self.FONT_SIZE))
+        self.ckb_auto_mode.grid(row=3, column=1, pady=self.PAD_SMALL, padx=self.PAD_SMALL, sticky="w")
+        # self.btn_load_step.configure(command=self.dog_trainer.train_step)
+        # buttons feedback
+        self.btn_feedback_pos = ctk.CTkButton(input_frame, text="Feedback +", font=("Arial", self.FONT_SIZE))
+        self.btn_feedback_pos.configure(command=lambda: self.send_feebdack(True), state=ctk.DISABLED)
+        self.btn_feedback_pos.grid(row=4, column=0, pady=self.PAD_SMALL,padx=self.PAD_SMALL, sticky="e")
+        self.btn_feedback_neg = ctk.CTkButton(input_frame, text="Feedback -", font=("Arial", self.FONT_SIZE))
+        self.btn_feedback_neg.configure(command=lambda: self.send_feebdack(False), state=ctk.DISABLED)
+        self.btn_feedback_neg.grid(row=4, column=1, pady=self.PAD_SMALL,padx=self.PAD_SMALL, sticky="w")
         # dog state
         dogstate_frame = ctk.CTkFrame(right_frame)
         dogstate_frame.grid(row=1, column=0, sticky="nsew", padx=self.PAD_LARGE, pady=self.PAD_LARGE)
@@ -69,6 +88,64 @@ class MainUI(ctk.CTk):
         self.state_text = ctk.CTkLabel(dogstate_frame, text="Idle", font=("Arial", self.FONT_SIZE))
         self.state_text.grid(row=1, column=1, sticky="w",padx=self.PAD_SMALL)
         self.state_text.configure(text_color="green")
+
+    def init_trainer(self):
+        self.btn_load_step.configure(state=ctk.DISABLED)
+        th.Thread(target=self._init_trainer_async).start()
+
+    def _init_trainer_async(self):
+        self.dog_trainer : dog_trainer = dog_trainer(self.print_output, self.dd_model.get())
+        self.dog_trainer.load_all()
+        if not self.dog_trainer.is_all_loaded():
+            self.print_output("Not all components of dog_trainer are loaded")
+            self.btn_load_step.configure(state=ctk.NORMAL)
+            return
+        self.btn_load_step.configure(command=self.on_start_button, text="Start Training", state=ctk.NORMAL)
+
+    def on_start_button(self):
+        th.Thread(target=self.training_loop).start()
+
+    def shutdown(self):
+        if self.dog_trainer is not None:
+            self.dog_trainer.stop_all()
+
+    def unlock_feedback(self):
+        self.btn_feedback_pos.configure(state=ctk.NORMAL)
+        self.btn_feedback_neg.configure(state=ctk.NORMAL)
+
+    def send_feebdack(self, feedback: bool):
+        self.btn_feedback_pos.configure(state=ctk.DISABLED)
+        self.btn_feedback_neg.configure(state=ctk.DISABLED)
+        self.dog_trainer.feedback = feedback
+        self.dog_trainer.wait_for_feedback.set()
+
+    def training_loop(self):
+        is_running = True
+        while is_running and self.dog_trainer.is_running:
+            is_running = False
+            self.btn_load_step.configure(state=ctk.DISABLED)
+            self.dog_trainer.train_step(self.unlock_feedback)
+            if self.ckb_auto_mode.get():
+                is_running = True
+        if self.dog_trainer.is_running:                
+            self.btn_load_step.configure(state=ctk.NORMAL)
+
+    def print_output(self, text: str, source: str = "UI", color="white"):
+        if not self.winfo_exists():
+            print("Tried to print to a non-existing window.")
+            return
+        # Format time as minutes:seconds.ms
+        ct = time.time() - self._epoch
+        time_stamp = f"{str(int(ct/60)).zfill(3)}:{str(int(ct%60)).zfill(2)}.{str(int(ct*1000)%1000).zfill(3)}"
+        output = f"[{time_stamp}|{source}:] {text}"
+
+        label = ctk.CTkLabel(self.sb_output, text=output, font=("Arial", self.FONT_SIZE), text_color=color, justify="left")
+        # label.bind("<Configure>", lambda e: label.configure(wraplength=self.sb_output.winfo_width()))
+        label.pack(side=ctk.TOP, anchor="w")
+        self.printed_output.append(label)
+        self.output += output + "\n"
+        print(output)
+        self.after(50,self.sb_output._parent_canvas.yview_moveto, 1.0)
 # if __name__ in {"__main__", "__mp_main__"}:
 #     my_ui = MainUI()
 #     # my_ui.mainloop()
