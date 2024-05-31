@@ -139,12 +139,15 @@ class LLM_API:
                 Here is the context provided to Llama:\n"
             case _:
                 raise ValueError("Invalid id")
-
-    def _create_payload(self, pre_prompt: str, context: dict, prompt: str, print_prompt: bool = False) -> str:
+    def _build_context(self, context: dict) -> str:
         context_str = ""
         for c in context:
             command, correct = context[c]
             context_str += f"{{{c}, {command}, {correct}}}" + "\n"
+        return context_str
+    
+    def _create_payload(self, pre_prompt: str, context: dict, prompt: str, print_prompt: bool = False) -> str:
+        context_str = self._build_context(context)
         prompt_str = "User: " + prompt + "\n"
         response_str = "Llama: "
         if print_prompt:
@@ -179,3 +182,9 @@ class LLM_API:
             "slot_id": -1,
             "prompt": pre_prompt + context_str + prompt_str
         }
+
+    def print_preprompt(self):
+        self._print("LLM Prepromt:\n" + self.preprompt)
+    
+    def print_context(self):
+        self._print("LLM Context:\n" + self._build_context(self.context))

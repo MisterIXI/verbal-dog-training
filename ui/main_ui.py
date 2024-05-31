@@ -19,7 +19,7 @@ class MainUI(ctk.CTk):
 
     def __init__(self):
         super().__init__()
-        self.dog_trainer = None
+        self.dog_trainer: dog_trainer = None
         self.setup_main_ui()
         shared_dict = {}
         self.printed_output = []
@@ -57,11 +57,11 @@ class MainUI(ctk.CTk):
         # Speech recognition
         sr_model_label = ctk.CTkLabel(input_frame, text="Model:", font=("Arial", self.FONT_SIZE))
         sr_model_label.grid(row=1, column=0, sticky="e", padx=self.PAD_SMALL, pady=self.PAD_SMALL)
-        self.dd_model = ctk.CTkOptionMenu(input_frame, values=[model.value for model in sr.Model], font=("Arial", self.FONT_SIZE),width=self.DD_WIDTH)
+        self.dd_model = ctk.CTkOptionMenu(input_frame, values=[model.value for model in sr.Model], font=("Arial", self.FONT_SIZE-1))
         self.dd_model.grid(row=1, column=1, sticky="w", padx=self.PAD_SMALL)
         sr_mic_label = ctk.CTkLabel(input_frame, text="Microphone:", font=("Arial", self.FONT_SIZE))
         sr_mic_label.grid(row=2, column=0, sticky="e", padx=self.PAD_SMALL, pady=self.PAD_SMALL)
-        self.dd_mic = ctk.CTkOptionMenu(input_frame, values=["Default", "None"], font=("Arial", self.FONT_SIZE),width=self.DD_WIDTH)
+        self.dd_mic = ctk.CTkOptionMenu(input_frame, values=["Default", "None"], font=("Arial", self.FONT_SIZE-1))
         self.dd_mic.grid(row=2, column=1, sticky="w", padx=self.PAD_SMALL)
         # buttons init
         self.btn_load_step = ctk.CTkButton(input_frame, text="Load Trainer", font=("Arial", self.FONT_SIZE), command=self.init_trainer)
@@ -76,6 +76,17 @@ class MainUI(ctk.CTk):
         self.btn_feedback_neg = ctk.CTkButton(input_frame, text="Feedback -", font=("Arial", self.FONT_SIZE))
         self.btn_feedback_neg.configure(command=lambda: self.send_feebdack(False), state=ctk.DISABLED)
         self.btn_feedback_neg.grid(row=4, column=1, pady=self.PAD_SMALL,padx=self.PAD_SMALL, sticky="w")
+        # buttons debug prints:
+        debug_label = ctk.CTkLabel(input_frame, text="Debug prints:", font=("Arial", self.FONT_SIZE))
+        debug_label.grid(row=5, column=0, columnspan=2, pady=self.PAD_SMALL)
+        self.btn_db_learned = ctk.CTkButton(input_frame, text="Learned", font=("Arial", self.FONT_SIZE), state=ctk.DISABLED)
+        self.btn_db_learned.grid(row=6, column=0, pady=self.PAD_SMALL,padx=self.PAD_SMALL, sticky="e")
+        self.btn_db_negatives = ctk.CTkButton(input_frame, text="Negatives", font=("Arial", self.FONT_SIZE), state=ctk.DISABLED)
+        self.btn_db_negatives.grid(row=6, column=1, pady=self.PAD_SMALL,padx=self.PAD_SMALL, sticky="w")
+        self.btn_db_prompt = ctk.CTkButton(input_frame, text="PrePrompt", font=("Arial", self.FONT_SIZE), state=ctk.DISABLED)
+        self.btn_db_prompt.grid(row=7, column=0, pady=self.PAD_SMALL,padx=self.PAD_SMALL, sticky="e")
+        self.btn_db_context = ctk.CTkButton(input_frame, text="Context", font=("Arial", self.FONT_SIZE), state=ctk.DISABLED)
+        self.btn_db_context.grid(row=7, column=1, pady=self.PAD_SMALL,padx=self.PAD_SMALL, sticky="w")
         # dog state
         dogstate_frame = ctk.CTkFrame(right_frame)
         dogstate_frame.grid(row=1, column=0, sticky="nsew", padx=self.PAD_LARGE, pady=self.PAD_LARGE)
@@ -101,6 +112,10 @@ class MainUI(ctk.CTk):
             self.btn_load_step.configure(state=ctk.NORMAL)
             return
         self.btn_load_step.configure(command=self.on_start_button, text="Start Training", state=ctk.NORMAL)
+        self.btn_db_learned.configure(command=self.dog_trainer.print_learned_commands, state=ctk.NORMAL)
+        self.btn_db_negatives.configure(command=self.dog_trainer.print_learned_negatives, state=ctk.NORMAL)
+        self.btn_db_prompt.configure(command=self.dog_trainer.llm_print_preprompt, state=ctk.NORMAL)
+        self.btn_db_context.configure(command=self.dog_trainer.llm_print_context, state=ctk.NORMAL)
 
     def on_start_button(self):
         th.Thread(target=self.training_loop).start()
@@ -141,6 +156,7 @@ class MainUI(ctk.CTk):
 
         label = ctk.CTkLabel(self.sb_output, text=output, font=("Arial", self.FONT_SIZE), text_color=color, justify="left")
         # label.bind("<Configure>", lambda e: label.configure(wraplength=self.sb_output.winfo_width()))
+        label.configure(wraplength=self.sb_output.winfo_width())
         label.pack(side=ctk.TOP, anchor="w")
         self.printed_output.append(label)
         self.output += output + "\n"

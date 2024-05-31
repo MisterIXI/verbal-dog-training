@@ -3,6 +3,8 @@ import custom_llm.llm_api as llm_api
 import enum
 import threading as th
 import Levenshtein as lev
+from collections import defaultdict
+import random
 
 class t_state(enum.Enum):
     idle = 0
@@ -13,12 +15,14 @@ class t_state(enum.Enum):
 
 class dog_trainer:
     LEVENSHTEIN_THRESHOLD = 5
+    COMMANDS = ["platz", "tanzen", "maennchen"]
     def __init__(self, print_callback: callable, sr_model: str):
         self.state = t_state.idle
         self.sr = None
         self.llm = None
         self.dc = None
         self.learned_commands = {}
+        self.learned_negatives:defaultdict[str,list] = defaultdict(list)
         self._print_cb = print_callback
         self.loaded = {"SR": False, "LLM": False, "DC": False}
         self.sr_model = sr_model
@@ -126,6 +130,12 @@ class dog_trainer:
                 self._print("Language model errored out. Cancelling training step...")
                 return
             self._print("Language model returned: " + command)
+        # when negative command association is currently, roll randomly
+        if command in self.learned_negatives[data]:
+            old_command = command
+            self._print("Command is in negative list. Rolling randomly...", color="red")
+            command = self.COMMANDS[random.randint(0, len(self.COMMANDS)-1)]
+            self._print(f"Rolled: {old_command} => {command}")
         # execute command
 
         # get feedback from user
@@ -140,8 +150,11 @@ class dog_trainer:
         self._print(f"Feedback: {data} => {command} was {self.feedback}")
         self.llm.add_context(data, command, self.feedback)
         if self.feedback:
+            if command in self.learned_negatives[data]:
+                self.learned_negatives[data].remove(command)
             self.learned_commands[data] = command
         else:
+            self.learned_negatives[data].append(command)
             # when negative and command was previously learned: remove from learned commands
             if data in self.learned_commands:
                 del self.learned_commands[data]
@@ -166,3 +179,17 @@ class dog_trainer:
         self.sr.data_ready.set()
         self.llm.data_ready.set()
         self.wait_for_feedback.set()
+
+    def print_learned_commands(self):
+        self._print("Learned commands:\n" + str(self.learned_commands))
+        
+    def print_learned_negatives(self):
+        self._print("Learned negatives:\n" + str(self.learned_negatives))
+        
+    def llm_print_preprompt(self):
+        if self.loaded["LLM"]:
+            self.llm.print_preprompt()
+    
+    def llm_print_context(self):
+        if self.loaded["LLM"]:
+            self.llm.print_context()

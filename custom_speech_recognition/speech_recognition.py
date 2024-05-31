@@ -4,9 +4,9 @@ import speech_recognition as sr
 import threading as th
 class Model(enum.Enum):
     """Enum for different models of the speech recognition library."""
-    W_T = "Whisper tiny"
-    W_D = "Whisper default"
-    W_L = "Whisper large"
+    W_T = "WH_tiny"
+    W_D = "WH_default"
+    W_L = "WH_large"
 
 class recognizer():
     def __init__(self, model:Model, print_callback: callable, language: str) -> None:
