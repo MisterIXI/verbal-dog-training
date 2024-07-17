@@ -4,8 +4,10 @@ import numpy as np
 import threading as th
 import time
 import math
+import Pyro5.api as api
 from actions import DOG_DEFAULT_HEIGHT, FOOT_RAISE_HEIGHT, MODE_IDLE, MODE_STAND, MODE_WALK, Action, create_action_dict
 
+@api.expose
 class BaseController:
     def __init__(self) -> None:
         self.action_dict = create_action_dict()
@@ -36,20 +38,23 @@ class BaseController:
         self.state = go1.HighState()
         self.udp.InitCmdData(self.cmd)
     
-    def set_action(self, action: Action):
+    def set_action(self, action: Action) -> str:
         if self.current_action != Action.idle:
             print("Cannot set action while current action is not idle")
-            return
+            return "Cannot set action while current action is not idle"
         self.next_action = action
+        return "Action set to " + str(action)
     
-    def start_loop(self):
+    def start_loop(self) -> None:
         self.run_loop = True
         self.loop_thread = th.Thread(target=self.update_loop)
         self.loop_thread.start()
     
-    def stop_loop(self):
+    def stop_loop(self) -> None:
         self.run_loop = False
     
+    def get_current_action(self) -> Action:
+        return self.current_action
     
     def update_loop(self):
         # for start, load the current action and start it from 0

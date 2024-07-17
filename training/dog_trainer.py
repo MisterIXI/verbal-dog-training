@@ -1,3 +1,4 @@
+from time import sleep
 import custom_speech_recognition.speech_recognition as sr
 import custom_llm.llm_api as llm_api
 import enum
@@ -5,7 +6,8 @@ import threading as th
 import Levenshtein as lev
 from collections import defaultdict
 import random
-
+import dog_controller.pyro_connector as dc
+import dog_controller.actions as actions
 class t_state(enum.Enum):
     idle = 0
     listening = 1
@@ -15,8 +17,9 @@ class t_state(enum.Enum):
 
 class dog_trainer:
     LEVENSHTEIN_THRESHOLD = 5
-    COMMANDS = ["platz", "tanzen", "maennchen"]
+    COMMANDS = [str(action)[7:] for action in actions.Action if action.value > 0]
     def __init__(self, print_callback: callable, sr_model: str):
+        print("Commands: ", self.COMMANDS)
         self.state = t_state.idle
         self.sr = None
         self.llm = None
@@ -41,7 +44,7 @@ class dog_trainer:
         model = sr.Model(self.sr_model)
         self.sr: sr.recognizer = sr.recognizer(model, self._print_cb, "german")
         self.threads["SR"] = th.Thread(target=self.sr.run).start()
-        self._print("Finished loading speech recognition.")
+        self._print("Finished loading speech recognition.", color="green")
         self.loaded["SR"] = True
 
     def _load_llm(self):
@@ -52,13 +55,21 @@ class dog_trainer:
             self._print("Language model query could not be sent. Is the server running?", color="red")
             return
         self.threads["LLM"] = th.Thread(target=self.llm.prompt).start()
-        self._print("Finished loading language model.")
+        self._print("Finished loading language model.", color="green")
         self.loaded["LLM"] = True
 
     def _load_dc(self):
         if self.loaded["DC"]:
             return
-        self._print("Finished loading dog controller.")
+        if self.dc is None:
+            self.dc = dc.remote_controller(self._print_cb)
+        elif not self.dc.is_connected():
+            self.dc.try_to_connect()
+        sleep(1)
+        if not self.dc.is_connected():
+            self._print("Could not connect to remote controller", "DT", "red")
+            return
+        self._print("Finished loading dog controller.", color="green")
         self.loaded["DC"] = True
 
     def load_all(self):

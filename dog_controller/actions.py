@@ -10,9 +10,9 @@ class Action(enum.Enum):
     idle = 0
     lie_down = 1
     shake = 2
-    jump_lr = 3
-    turn_360 = 4
-    vibe_8 = 5
+    # jump_lr = 3
+    # turn_360 = 4
+    # vibe_8 = 5
 
 FOOT_RAISE_HEIGHT = 0.08
 DOG_DEFAULT_HEIGHT = 0.028
@@ -60,5 +60,5 @@ def create_action_dict() -> tp.Dict[Action, tp.List[tp.Tuple]]:
             (5, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0.3, 0, 0]),
             (5.5, MODE_STAND, DOG_DEFAULT_HEIGHT,   [0, 0, 0]),
             (6.5, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0, 0, 0]),
-        ])
+        ]),
     }
