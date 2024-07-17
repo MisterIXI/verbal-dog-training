@@ -1,3 +1,4 @@
+from cgitb import text
 import customtkinter as ctk
 import _tkinter as tk
 from .dog_control_ui import DC_UI
@@ -105,7 +106,7 @@ class MainUI(ctk.CTk):
         th.Thread(target=self._init_trainer_async).start()
 
     def _init_trainer_async(self):
-        self.dog_trainer : dog_trainer = dog_trainer(self.print_output, self.dd_model.get())
+        self.dog_trainer : dog_trainer = dog_trainer(self.print_output, self.dd_model.get(), self.update_dog_state_text)
         self.dog_trainer.load_all()
         if not self.dog_trainer.is_all_loaded():
             self.print_output("Not all components of dog_trainer are loaded")
@@ -162,6 +163,14 @@ class MainUI(ctk.CTk):
         self.output += output + "\n"
         print(output)
         self.after(50,self.sb_output._parent_canvas.yview_moveto, 1.0)
+        
+    def update_dog_state_text(self, state: text):
+        if state == "idle":
+            self.state_text.configure(text=state, text_color="green")
+        else:
+            self.state_text.configure(text=state, text_color="yellow")
+        
+            
 # if __name__ in {"__main__", "__mp_main__"}:
 #     my_ui = MainUI()
 #     # my_ui.mainloop()

@@ -1,3 +1,4 @@
+from argparse import Action
 from time import sleep
 import custom_speech_recognition.speech_recognition as sr
 import custom_llm.llm_api as llm_api
@@ -18,8 +19,9 @@ class t_state(enum.Enum):
 class dog_trainer:
     LEVENSHTEIN_THRESHOLD = 5
     COMMANDS = [str(action)[7:] for action in actions.Action if action.value > 0]
-    def __init__(self, print_callback: callable, sr_model: str):
+    def __init__(self, print_callback: callable, sr_model: str, state_callback: callable) -> None:
         print("Commands: ", self.COMMANDS)
+        self.state_callback = state_callback
         self.state = t_state.idle
         self.sr = None
         self.llm = None
@@ -50,7 +52,7 @@ class dog_trainer:
     def _load_llm(self):
         if self.loaded["LLM"]:
             return
-        self.llm = llm_api.LLM_API(self._print_cb, obfuscate_names=False)
+        self.llm = llm_api.LLM_API(self._print_cb, commands=self.COMMANDS ,obfuscate_names=False)
         if not self.llm.test_if_running():
             self._print("Language model query could not be sent. Is the server running?", color="red")
             return
@@ -62,11 +64,11 @@ class dog_trainer:
         if self.loaded["DC"]:
             return
         if self.dc is None:
-            self.dc = dc.remote_controller(self._print_cb)
-        elif not self.dc.is_connected():
-            self.dc.try_to_connect()
+            self.dc = dc.remote_controller(self._print_cb, self.state_callback)
+        if not self.dc.is_connected:
+            self.dc.start_pyro_loop()
         sleep(1)
-        if not self.dc.is_connected():
+        if not self.dc.is_connected:
             self._print("Could not connect to remote controller", "DT", "red")
             return
         self._print("Finished loading dog controller.", color="green")
@@ -147,8 +149,19 @@ class dog_trainer:
             self._print("Command is in negative list. Rolling randomly...", color="red")
             command = self.COMMANDS[random.randint(0, len(self.COMMANDS)-1)]
             self._print(f"Rolled: {old_command} => {command}")
+        if command not in self.COMMANDS:
+            self._print("Command not recognized. Cancelling training step...", color="red")
+            return
+        action = actions.Action[command]
         # execute command
-
+        self._print(f"Executing command: {command}...")
+        if not self.dc.is_connected:
+            self._print("Not connected to remote controller", "DC", "red")
+            return
+        self.dc.set_action(action)
+        self._print(f"Waiting for idle from dog controller...")
+        self.dc.wait_for_idle.wait()
+        self.dc.wait_for_idle.clear()
         # get feedback from user
         self._print("Waiting for feedback...")
         if feedback_unlock_cb is not None:
@@ -204,3 +217,4 @@ class dog_trainer:
     def llm_print_context(self):
         if self.loaded["LLM"]:
             self.llm.print_context()
+            

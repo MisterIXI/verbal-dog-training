@@ -1,4 +1,3 @@
-import robot_interface as go1
 import enum
 import numpy as np
 import threading as th
@@ -6,6 +5,7 @@ import time
 import math
 import Pyro5.api as api
 from actions import DOG_DEFAULT_HEIGHT, FOOT_RAISE_HEIGHT, MODE_IDLE, MODE_STAND, MODE_WALK, Action, create_action_dict
+import robot_interface as go1
 
 @api.expose
 class BaseController:

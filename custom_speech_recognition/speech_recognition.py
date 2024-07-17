@@ -2,14 +2,17 @@ import time
 import enum
 import speech_recognition as sr
 import threading as th
+
+
 class Model(enum.Enum):
     """Enum for different models of the speech recognition library."""
     W_T = "WH_tiny"
     W_D = "WH_default"
     W_L = "WH_large"
 
+
 class recognizer():
-    def __init__(self, model:Model, print_callback: callable, language: str) -> None:
+    def __init__(self, model: Model, print_callback: callable, language: str) -> None:
         self.print_callback = print_callback
         self.model = model
         self.language = "german"
@@ -27,13 +30,14 @@ class recognizer():
             method(audio, model=name, language=self.language)
         except Exception as e:
             pass
+
     def stop(self):
         self.is_running = False
         self.thread_event.set()
 
     def _print(self, text: str, source: str = "SR", color="white"):
         self.print_callback(text, source, color)
-        
+
     def run(self):
         """When self.thread_event is set, listen for audio and recognize it in one step, then set self.data_ready once the data is ready."""
         self.init_model()
@@ -53,21 +57,23 @@ class recognizer():
             # set data flag to indicate that data is ready
             self.data_ready.set()
 
-
-
     def match_model(self, model: Model) -> tuple[callable, str]:
-        match model:
-            case Model.W_T:
-                m_method = self.r.recognize_whisper
-                m_name = "tiny"
-            case Model.W_D:
-                m_method = self.r.recognize_whisper
-                m_name = "base"
-            case Model.W_L:
-                m_method = self.r.recognize_whisper
-                m_name = "large"
-            case _:
-                raise ValueError("Model not found")
+        # match model:
+        if model == Model.W_T:
+            # case Model.W_T:
+            m_method = self.r.recognize_whisper
+            m_name = "tiny"
+            # case Model.W_D:
+        elif model == Model.W_D:
+            m_method = self.r.recognize_whisper
+            m_name = "base"
+            # case Model.W_L:
+        elif model == Model.W_L:
+            m_method = self.r.recognize_whisper
+            m_name = "large"
+            # case _:
+        else:
+            raise ValueError("Model not found")
         return m_method, m_name
 
     def listen_auto(self,  timeout: int = 5, model_override: Model = None):
@@ -86,7 +92,7 @@ class recognizer():
         try:
             self._print(f"Recognizing using {model.value} model...")
             self._print(f"model: {m_name}, language: {self.language}")
-            text = m_method(audio, model=m_name, language="german")
+            text = m_method(audio, model=m_name, language=self.language)
             # text = m_method(audio)
             # text = self.r.recognize_whisper(audio)
             self.data = text
@@ -96,5 +102,9 @@ class recognizer():
         except sr.RequestError as e:
             self._print(f"Could not request results; {e}")
             self.data = ""
+        # except TypeError as e:
+        #     self._print(f"Error in recognizing audio; {e}")
+        #     self._print("Error in recognizing audio")
+        #     self.data = ""
         finally:
             self._print(f"Time elapsed: {time.time() - start_time}")

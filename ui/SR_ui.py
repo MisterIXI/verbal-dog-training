@@ -2,7 +2,6 @@ import customtkinter as ctk
 import enum
 from custom_speech_recognition import speech_recognition as sr
 # enum for models
-
 class SR_UI(ctk.CTkFrame):
     def __init__(self, master, shared_dict: dict):
         super().__init__(master)

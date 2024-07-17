@@ -1,3 +1,4 @@
+import random
 import requests
 import time
 import threading as th
@@ -13,13 +14,11 @@ class LLM_API:
         self.context = {}
         self.commands = commands
         self.preprompt = self._get_preprompt()
-        self.context["platz"] = ("platz", True)
-        self.context["beweg dich"] = ("maennchen", False)
-        self.context["runter"] = ("platz", True)
-        self.context["tanzen"] = ("tanzen", True)
-        self.context["runter"] = ("maennchen", False)
-        self.context["maennchen"] = ("maennchen", True)
-        self.context["beweg dich"] = ("tanzen", True)
+        for i in range(5):
+            # add 5 random context entries
+            a = random.choice(commands)
+            b = random.choice(commands)
+            self.add_context(a, b, a == b)
         self.is_running = True
         self.prompt_event = th.Event()
         self.data_ready = th.Event()
