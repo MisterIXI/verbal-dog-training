@@ -26,6 +26,7 @@ class BaseController:
         self.loop_thread = None
         # setup udp and cmd
         self.setup_cmd()
+        self.start_loop()
         
     def get_state(self) -> go1.HighState:
         self.udp.Recv()
@@ -42,6 +43,8 @@ class BaseController:
         if self.current_action != Action.idle:
             print("Cannot set action while current action is not idle")
             return "Cannot set action while current action is not idle"
+        if action is not Action:
+            action = Action(action)
         self.next_action = action
         return "Action set to " + str(action)
     
@@ -121,19 +124,23 @@ class BaseController:
             # check if current step is done and move to the next one
             curr_time = time.time() - start_time
             if curr_time >= curr_step[0]:
-                if len(curr_list) == 0:
+                if len(curr_list) > 0:
+                    curr_step = curr_list.pop(0)
+                else:
                     # finished with current action
                     if self.current_action == Action.idle:
                         # if idle, loop until next action is set
                         if self.next_action != Action.idle:
                             self.current_action = self.next_action
                             self.next_action = Action.idle
+                            print("Starting action: " + str(self.current_action))
                             curr_list = self.action_dict[self.current_action].copy()
                             start_time = time.time()
                             curr_time = 0
                             last_time = 0
                     elif self.current_action == Action.return_to_idle:
                         self.current_action = Action.idle
+                        print("Back to idle")
                         curr_list = self.action_dict[self.current_action].copy()
                         start_time = time.time()
                         curr_time = 0
@@ -141,10 +148,11 @@ class BaseController:
                     else:
                         # finished neither idle and return animation
                         self.current_action = Action.return_to_idle
+                        print("Returning to idle")
                         curr_list = self.action_dict[self.current_action].copy()
                         start_time = time.time()
                         curr_time = 0
                         last_time = 0
             # delay update very slightly
-            time.sleep(0.01)
+            time.sleep(0.0001)
             

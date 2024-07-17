@@ -1,7 +1,6 @@
 from time import sleep
 import Pyro5.api as api
 import Pyro5.errors
-from networkx import is_connected
 from . import actions
 import threading as th
 
