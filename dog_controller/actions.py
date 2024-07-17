@@ -10,9 +10,10 @@ class Action(enum.Enum):
     idle = 0
     lie_down = 1
     shake = 2
-    # jump_lr = 3
-    # turn_360 = 4
-    # vibe_8 = 5
+    turn_360 = 3
+    vibe_8 = 4
+    # jump_lr = 5
+
 
 FOOT_RAISE_HEIGHT = 0.08
 DOG_DEFAULT_HEIGHT = 0.028
@@ -22,6 +23,7 @@ MODE_STAND = 1
 MODE_WALK = 2
 MODE_FORCE_DOWN = 5
 MODE_FORCE_UP = 6
+
 
 def create_action_dict() -> tp.Dict[Action, tp.List[tp.Tuple]]:
     return {
@@ -60,5 +62,29 @@ def create_action_dict() -> tp.Dict[Action, tp.List[tp.Tuple]]:
             (5, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0.6, 0, 0]),
             (5.5, MODE_STAND, DOG_DEFAULT_HEIGHT,   [0, 0, 0]),
             (6.5, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0, 0, 0]),
+        ]),
+        Action.turn_360: ([
+            (0, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0, 0, 0]),
+            (0.5, MODE_WALK, DOG_DEFAULT_HEIGHT, 360, [0, 0], FOOT_RAISE_HEIGHT),
+            (6, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0, 0, 0]),
+        ]),
+        Action.vibe_8: ([
+            (0, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0, 0, 0]),
+            (1.0, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0.5, -0.5, 0]),
+            (1.5, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0.9, 0, 0]),
+            (2.0, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0.5, 0.5, 0]),
+            (2.5, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0, 0, 0]),
+            (3.0, MODE_STAND, DOG_DEFAULT_HEIGHT,     [-0.5, -0.5, 0]),
+            (3.5, MODE_STAND, DOG_DEFAULT_HEIGHT,     [-0.9, 0, 0]),
+            (4.0, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0.5, 0.5, 0]),
+            (4.5, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0, 0, 0]),
+            (5.0, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0.5, -0.5, 0]),
+            (5.5, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0.9, 0, 0]),
+            (6.0, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0.5, 0.5, 0]),
+            (6.5, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0, 0, 0]),
+            (7.0, MODE_STAND, DOG_DEFAULT_HEIGHT,     [-0.5, -0.5, 0]),
+            (7.5, MODE_STAND, DOG_DEFAULT_HEIGHT,     [-0.9, 0, 0]),
+            (8.0, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0.5, 0.5, 0]),
+            (8.5, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0, 0, 0]),
         ]),
     }
