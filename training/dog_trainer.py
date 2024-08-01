@@ -64,7 +64,7 @@ class dog_trainer:
         if self.loaded["DC"]:
             return
         if self.dc is None:
-            self.dc = dc.remote_controller(self._print_cb, self.state_callback)
+            self.dc = dc.remote_controller(self._print_cb, self.state_callback, host_adress="172.21.201.135")
         if not self.dc.is_connected:
             self.dc.start_pyro_loop()
         sleep(1)

@@ -106,10 +106,7 @@ class BaseController:
                     angle_diff = math.radians(curr_step[3] - last_step[3])
                     # calculate raidans per second turnspeed
                     self.yawspeed = angle_diff / (curr_step[0] - last_step[0])
-                    self.velocity = [
-                        np.interp(t, last_step[4][0], curr_step[4][0]),
-                        np.interp(t, last_step[4][1], curr_step[4][1])
-                    ]
+                    self.velocity = curr_step[4]
             # set cmd values and send
             self.cmd.mode = self.mode
             self.cmd.euler = self.euler
