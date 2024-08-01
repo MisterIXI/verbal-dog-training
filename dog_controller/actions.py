@@ -16,7 +16,7 @@ class Action(enum.Enum):
 
 
 FOOT_RAISE_HEIGHT = 0.08
-DOG_DEFAULT_HEIGHT = 0.028
+DOG_DEFAULT_HEIGHT = 0
 DOG_LOWEST_HEIGHT = 0.010
 MODE_IDLE = 0
 MODE_STAND = 1
@@ -36,10 +36,11 @@ def create_action_dict() -> tp.Dict[Action, tp.List[tp.Tuple]]:
         # move_arr: mode 5 FORCE_DOWN:  [time, mode]
         # move_arr: mode 6 FORCE_UP:    [time, mode]
         Action.return_to_idle: ([
-            (0, MODE_WALK, DOG_DEFAULT_HEIGHT, 0, [0, 0], FOOT_RAISE_HEIGHT),
-            (3, MODE_WALK, DOG_DEFAULT_HEIGHT, 0, [0, 0], FOOT_RAISE_HEIGHT),
+            # (0, MODE_WALK, DOG_DEFAULT_HEIGHT, 0, [0, 0], FOOT_RAISE_HEIGHT),
+            # (3, MODE_WALK, DOG_DEFAULT_HEIGHT, 0, [0, 0], FOOT_RAISE_HEIGHT),
             # (3, MODE_STAND, DOG_DEFAULT_HEIGHT, [0, 0, 0]),
             # (4, MODE_STAND, DOG_DEFAULT_HEIGHT, [0, 0, 0]),
+            (0, MODE_IDLE, DOG_DEFAULT_HEIGHT, [0, 0, 0]),
         ]),
         Action.idle: ([
             (0, MODE_IDLE, DOG_DEFAULT_HEIGHT, [0, 0, 0]),
@@ -53,10 +54,10 @@ def create_action_dict() -> tp.Dict[Action, tp.List[tp.Tuple]]:
             (5.5, MODE_STAND, DOG_DEFAULT_HEIGHT, [0, 0, 0]),
         ]),
         Action.shake: ([
-            (0, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0, 0, 0]),
+            (0, MODE_FORCE_UP, DOG_DEFAULT_HEIGHT,     [0, 0, 0]),
             (0.5, MODE_STAND, DOG_DEFAULT_HEIGHT,   [0, 0, 0]),
             (1.0, MODE_STAND, DOG_DEFAULT_HEIGHT,   [0.6, 0, 0]),
-            (2, MODE_STAND, DOG_DEFAULT_HEIGHT,     [-0.6, 0, 0]),
+            (6, MODE_STAND, DOG_DEFAULT_HEIGHT,     [-0.6, 0, 0]),
             (3, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0.6, 0, 0]),
             (4, MODE_STAND, DOG_DEFAULT_HEIGHT,     [-0.6, 0, 0]),
             (5, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0.6, 0, 0]),
