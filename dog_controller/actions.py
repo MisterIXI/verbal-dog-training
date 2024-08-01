@@ -42,7 +42,7 @@ def create_action_dict() -> tp.Dict[Action, tp.List[tp.Tuple]]:
             (4, MODE_STAND, DOG_DEFAULT_HEIGHT, [0, 0, 0]),
         ]),
         Action.idle: ([
-            (0, MODE_STAND, DOG_DEFAULT_HEIGHT, [0, 0, 0]),
+            (0, MODE_IDLE, DOG_DEFAULT_HEIGHT, [0, 0, 0]),
         ]),
         Action.lie_down: ([
             (0, MODE_STAND, DOG_DEFAULT_HEIGHT, [0, 0, 0]),
