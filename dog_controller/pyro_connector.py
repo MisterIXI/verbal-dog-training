@@ -1,24 +1,29 @@
 from time import sleep
 import Pyro5.api as api
 import Pyro5.errors
+from networkx import is_connected
 from . import actions
 import threading as th
 
 
 class remote_controller():
-    def __init__(self, print_callback: callable, state_callback: callable, host_adress="localhost") -> None:
+    def __init__(self, print_callback: callable, state_callback: callable, host_adress="localhost", use_dummy_controller=False) -> None:
         self.print_callback = print_callback
         self.host_adress = host_adress
         self.wait_for_idle = th.Event()
+        self.has_finished_connection_attempt = th.Event()
         self.watcher_running = False
         self.state_callback = state_callback
         self.state = actions.Action.idle
         self.is_connected = False
         self.pyro_thread = None
         self.next_action = None
+        self.use_dummy_controller = use_dummy_controller
+        self.controller = None
         
     def start_pyro_loop(self):
-        if self.pyro_thread is not None:
+        self.has_finished_connection_attempt.clear()
+        if self.pyro_thread is not None and self.pyro_thread.is_alive():
             self._print("Pyro loop already running", "DC", "yellow")
             return
         self._print("Starting pyro thread")
@@ -26,9 +31,11 @@ class remote_controller():
         self.pyro_thread.start()
 
     def _pyro_loop(self):
-        self._print("Pyro thread attempting to connect...")
         self.try_to_connect()
-        self._print("Starting pyro loop")
+        if self.is_connected:
+            self._print("Starting pyro loop")
+        else:
+            self._print("Aborting pyro loop due to failed connection", "DC", "red")
         while self.is_connected:
             if self.next_action is not None:
                 response: str = self.controller.set_action(self.next_action)
@@ -47,6 +54,7 @@ class remote_controller():
                 if new_state == actions.Action.idle:
                     self.wait_for_idle.set()
             self.test_connection()
+            sleep(0.1)
 
     def _print(self, text: str, source: str = "DC", color="white"):
         self.print_callback(text, source, color)
@@ -61,6 +69,8 @@ class remote_controller():
         return True
 
     def try_to_connect(self):
+        self.has_finished_connection_attempt.clear()
+        self._print("Pyro thread attempting to connect...")
         try:
             self.controller = api.Proxy(
                 f"PYRO:dog_controller@{self.host_adress}:44544")
@@ -69,12 +79,18 @@ class remote_controller():
             # self._print("Could not connect to remote controller", "DC", "red")
             self.controller = None
             self.is_connected = False
+            self.has_finished_connection_attempt.set()
             return False
         self.is_connected = True
+        self.has_finished_connection_attempt.set()
 
     def set_action(self, action: actions.Action):
         self.next_action = action
-
+        
+    def kill_thread(self):
+        if self.pyro_thread is not None:
+            self.pyro_thread = None
+            
     def start_loop(self):
         if not self.test_connection():
             self._print("Not connected to remote controller", "DC", "red")

@@ -1,5 +1,7 @@
 from argparse import Action
 from time import sleep
+
+from numpy import add
 import custom_speech_recognition.speech_recognition as sr
 import custom_llm.llm_api as llm_api
 import enum
@@ -19,7 +21,7 @@ class t_state(enum.Enum):
 class dog_trainer:
     LEVENSHTEIN_THRESHOLD = 5
     COMMANDS = [str(action)[7:] for action in actions.Action if action.value > 0]
-    def __init__(self, print_callback: callable, sr_model: str, state_callback: callable) -> None:
+    def __init__(self, print_callback: callable, sr_model: str, state_callback: callable, dog_controller: str) -> None:
         print("Commands: ", self.COMMANDS)
         self.state_callback = state_callback
         self.state = t_state.idle
@@ -31,6 +33,7 @@ class dog_trainer:
         self._print_cb = print_callback
         self.loaded = {"SR": False, "LLM": False, "DC": False}
         self.sr_model = sr_model
+        self.dog_controller = dog_controller
         self.train_step_event = th.Event()
         self.wait_for_feedback = th.Event()
         self.feedback: bool = False
@@ -63,11 +66,21 @@ class dog_trainer:
     def _load_dc(self):
         if self.loaded["DC"]:
             return
+        if self.dog_controller == "Pyro_dog":
+            address = "192.168.123.161"
+        elif self.dog_controller == "Dummy":
+            address = "localhost"
+        elif self.dog_controller == "Pyro_wsl":
+            address = "172.21.201.135"
+        else:
+            self._print("Invalid dog controller specified", "DT", "red")
+            return
         if self.dc is None:
-            self.dc = dc.remote_controller(self._print_cb, self.state_callback, host_adress="172.21.201.135")
+            self.dc = dc.remote_controller(self._print_cb, self.state_callback, host_adress=address)
         if not self.dc.is_connected:
+            self.dc.host_adress = address
             self.dc.start_pyro_loop()
-        sleep(1)
+        self.dc.has_finished_connection_attempt.wait()
         if not self.dc.is_connected:
             self._print("Could not connect to remote controller", "DT", "red")
             return

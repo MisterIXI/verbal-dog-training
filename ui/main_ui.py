@@ -1,9 +1,6 @@
 from cgitb import text
 import customtkinter as ctk
 import _tkinter as tk
-from .dog_control_ui import DC_UI
-from .SR_ui import SR_UI
-from .LLM_ui import LLM_UI
 from custom_speech_recognition import speech_recognition as sr
 from training.dog_trainer import dog_trainer, t_state
 import time
@@ -28,6 +25,7 @@ class MainUI(ctk.CTk):
         self.output = ""
 
     def setup_main_ui(self):
+        curr_row:int = 0
         # change nicegui background color to hexcode "282828"
         self._set_appearance_mode("dark")
         ctk.set_default_color_theme("dark-blue")
@@ -41,53 +39,66 @@ class MainUI(ctk.CTk):
         content_frame.grid_columnconfigure(1, weight=1)
         content_frame.grid_rowconfigure(0, weight=1)
         self.sb_output = ctk.CTkScrollableFrame(content_frame)
-        self.sb_output.grid(row=0, column=0, sticky="nsew", padx=self.PAD_LARGE, pady=self.PAD_LARGE)
+        self.sb_output.grid(row=curr_row, column=0, sticky="nsew", padx=self.PAD_LARGE, pady=self.PAD_LARGE)
         right_frame = ctk.CTkFrame(content_frame)
-        right_frame.grid(row=0, column=1, sticky="nsew", padx=self.PAD_LARGE, pady=self.PAD_LARGE)
+        right_frame.grid(row=curr_row, column=1, sticky="nsew", padx=self.PAD_LARGE, pady=self.PAD_LARGE)
         right_frame.grid_rowconfigure(0, weight=1)
         right_frame.grid_rowconfigure(1, weight=1)
         right_frame.grid_columnconfigure(0, weight=1)
         # settings and buttons
         input_frame = ctk.CTkFrame(right_frame)
-        input_frame.grid(row=0, column=0, sticky="nsew", padx=self.PAD_LARGE, pady=self.PAD_LARGE)
+        input_frame.grid(row=curr_row, column=0, sticky="nsew", padx=self.PAD_LARGE, pady=self.PAD_LARGE)
         input_frame.grid_columnconfigure(0, weight=1)
         input_frame.grid_columnconfigure(1, weight=1)
         input_label = ctk.CTkLabel(input_frame, text="Settings", font=("Arial", self.HEADER_SIZE))
-        input_label.grid(row=0, column=0, columnspan=2, sticky="n", pady=self.PAD_LARGE)
+        input_label.grid(row=curr_row, column=0, columnspan=2, sticky="n", pady=self.PAD_LARGE)
+        curr_row += 1
         # input_label.place(relx=0.5, rely=0, anchor=ctk.N)
         # Speech recognition
         sr_model_label = ctk.CTkLabel(input_frame, text="Model:", font=("Arial", self.FONT_SIZE))
-        sr_model_label.grid(row=1, column=0, sticky="e", padx=self.PAD_SMALL, pady=self.PAD_SMALL)
+        sr_model_label.grid(row=curr_row, column=0, sticky="e", padx=self.PAD_SMALL, pady=self.PAD_SMALL)
         self.dd_model = ctk.CTkOptionMenu(input_frame, values=[model.value for model in sr.Model], font=("Arial", self.FONT_SIZE-1))
-        self.dd_model.grid(row=1, column=1, sticky="w", padx=self.PAD_SMALL)
+        self.dd_model.grid(row=curr_row, column=1, sticky="w", padx=self.PAD_SMALL)
         sr_mic_label = ctk.CTkLabel(input_frame, text="Microphone:", font=("Arial", self.FONT_SIZE))
-        sr_mic_label.grid(row=2, column=0, sticky="e", padx=self.PAD_SMALL, pady=self.PAD_SMALL)
+        curr_row += 1
+        sr_mic_label.grid(row=curr_row, column=0, sticky="e", padx=self.PAD_SMALL, pady=self.PAD_SMALL)
         self.dd_mic = ctk.CTkOptionMenu(input_frame, values=["Default", "None"], font=("Arial", self.FONT_SIZE-1))
-        self.dd_mic.grid(row=2, column=1, sticky="w", padx=self.PAD_SMALL)
+        self.dd_mic.grid(row=curr_row, column=1, sticky="w", padx=self.PAD_SMALL)
+        curr_row += 1
+        # DC selection
+        dc_sel_label = ctk.CTkLabel(input_frame, text="Dog controller:", font=("Arial", self.FONT_SIZE))
+        dc_sel_label.grid(row=curr_row, column=0, sticky="e", padx=self.PAD_SMALL, pady=self.PAD_SMALL)
+        self.dd_dc = ctk.CTkOptionMenu(input_frame, values=["Pyro_dog", "Dummy"], font=("Arial", self.FONT_SIZE-1))
+        self.dd_dc.grid(row=curr_row, column=1, sticky="w", padx=self.PAD_SMALL)
+        curr_row += 1
         # buttons init
         self.btn_load_step = ctk.CTkButton(input_frame, text="Load Trainer", font=("Arial", self.FONT_SIZE), command=self.init_trainer)
-        self.btn_load_step.grid(row=3, column=0, pady=self.PAD_SMALL,padx=self.PAD_SMALL, sticky="e")
+        self.btn_load_step.grid(row=curr_row, column=0, pady=self.PAD_SMALL,padx=self.PAD_SMALL, sticky="e")
         self.ckb_auto_mode = ctk.CTkCheckBox(input_frame, text="Auto Mode", font=("Arial", self.FONT_SIZE))
-        self.ckb_auto_mode.grid(row=3, column=1, pady=self.PAD_SMALL, padx=self.PAD_SMALL, sticky="w")
+        self.ckb_auto_mode.grid(row=curr_row, column=1, pady=self.PAD_SMALL, padx=self.PAD_SMALL, sticky="w")
+        curr_row += 1
         # self.btn_load_step.configure(command=self.dog_trainer.train_step)
         # buttons feedback
         self.btn_feedback_pos = ctk.CTkButton(input_frame, text="Feedback +", font=("Arial", self.FONT_SIZE))
         self.btn_feedback_pos.configure(command=lambda: self.send_feebdack(True), state=ctk.DISABLED)
-        self.btn_feedback_pos.grid(row=4, column=0, pady=self.PAD_SMALL,padx=self.PAD_SMALL, sticky="e")
+        self.btn_feedback_pos.grid(row=curr_row, column=0, pady=self.PAD_SMALL,padx=self.PAD_SMALL, sticky="e")
         self.btn_feedback_neg = ctk.CTkButton(input_frame, text="Feedback -", font=("Arial", self.FONT_SIZE))
         self.btn_feedback_neg.configure(command=lambda: self.send_feebdack(False), state=ctk.DISABLED)
-        self.btn_feedback_neg.grid(row=4, column=1, pady=self.PAD_SMALL,padx=self.PAD_SMALL, sticky="w")
+        self.btn_feedback_neg.grid(row=curr_row, column=1, pady=self.PAD_SMALL,padx=self.PAD_SMALL, sticky="w")
+        curr_row += 1
         # buttons debug prints:
         debug_label = ctk.CTkLabel(input_frame, text="Debug prints:", font=("Arial", self.FONT_SIZE))
-        debug_label.grid(row=5, column=0, columnspan=2, pady=self.PAD_SMALL)
+        debug_label.grid(row=curr_row, column=0, columnspan=2, pady=self.PAD_SMALL)
         self.btn_db_learned = ctk.CTkButton(input_frame, text="Learned", font=("Arial", self.FONT_SIZE), state=ctk.DISABLED)
-        self.btn_db_learned.grid(row=6, column=0, pady=self.PAD_SMALL,padx=self.PAD_SMALL, sticky="e")
+        curr_row += 1
+        self.btn_db_learned.grid(row=curr_row, column=0, pady=self.PAD_SMALL,padx=self.PAD_SMALL, sticky="e")
         self.btn_db_negatives = ctk.CTkButton(input_frame, text="Negatives", font=("Arial", self.FONT_SIZE), state=ctk.DISABLED)
-        self.btn_db_negatives.grid(row=6, column=1, pady=self.PAD_SMALL,padx=self.PAD_SMALL, sticky="w")
+        self.btn_db_negatives.grid(row=curr_row, column=1, pady=self.PAD_SMALL,padx=self.PAD_SMALL, sticky="w")
         self.btn_db_prompt = ctk.CTkButton(input_frame, text="PrePrompt", font=("Arial", self.FONT_SIZE), state=ctk.DISABLED)
-        self.btn_db_prompt.grid(row=7, column=0, pady=self.PAD_SMALL,padx=self.PAD_SMALL, sticky="e")
+        curr_row += 1
+        self.btn_db_prompt.grid(row=curr_row, column=0, pady=self.PAD_SMALL,padx=self.PAD_SMALL, sticky="e")
         self.btn_db_context = ctk.CTkButton(input_frame, text="Context", font=("Arial", self.FONT_SIZE), state=ctk.DISABLED)
-        self.btn_db_context.grid(row=7, column=1, pady=self.PAD_SMALL,padx=self.PAD_SMALL, sticky="w")
+        self.btn_db_context.grid(row=curr_row, column=1, pady=self.PAD_SMALL,padx=self.PAD_SMALL, sticky="w")
         # dog state
         dogstate_frame = ctk.CTkFrame(right_frame)
         dogstate_frame.grid(row=1, column=0, sticky="nsew", padx=self.PAD_LARGE, pady=self.PAD_LARGE)
@@ -106,7 +117,11 @@ class MainUI(ctk.CTk):
         th.Thread(target=self._init_trainer_async).start()
 
     def _init_trainer_async(self):
-        self.dog_trainer : dog_trainer = dog_trainer(self.print_output, self.dd_model.get(), self.update_dog_state_text)
+        if self.dog_trainer is None:
+            self.dog_trainer : dog_trainer = dog_trainer(self.print_output, self.dd_model.get(), self.update_dog_state_text, self.dd_dc.get())
+        else:
+            self.dog_trainer.sr_model = self.dd_model.get()
+            self.dog_trainer.dog_controller = self.dd_dc.get()
         self.dog_trainer.load_all()
         if not self.dog_trainer.is_all_loaded():
             self.print_output("Not all components of dog_trainer are loaded")
