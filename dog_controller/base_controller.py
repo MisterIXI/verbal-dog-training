@@ -34,7 +34,8 @@ class BaseController:
         return self.state
     
     def setup_cmd(self):
-        self.udp = go1.UDP(0xee, 8080, "192.168.123.161", 8082)
+        # self.udp = go1.UDP(0xee, 8080, "192.168.123.161", 8082)
+        self.udp = go1.UDP(0xee, 8080, "127.0.0.1", 8082)
         self.cmd = go1.HighCmd()
         self.state = go1.HighState()
         self.udp.InitCmdData(self.cmd)
@@ -176,5 +177,5 @@ class BaseController:
             # else:
             #     print(f"time left: {curr_time}; {curr_step[0]}")
             # delay update very slightly
-            time.sleep(0.00001)
+            time.sleep(0.01)
             
