@@ -83,12 +83,15 @@ class MainUI(ctk.CTk):
         self.ckb_auto_mode.grid(row=curr_row, column=1, pady=self.PAD_SMALL, padx=self.PAD_SMALL, sticky="w")
         curr_row += 1
         # self.btn_load_step.configure(command=self.dog_trainer.train_step)
+        # auto feedback
+        self.ckb_auto_feedback = ctk.CTkCheckBox(input_frame, text="Auto Feedback", font=("Arial", self.FONT_SIZE), command=self.on_auto_feedback_clicked)
+        self.ckb_auto_feedback.grid(row=curr_row, column=1, pady=self.PAD_SMALL, padx=self.PAD_SMALL, sticky="w")
         # buttons feedback
         self.btn_feedback_pos = ctk.CTkButton(input_frame, text="Feedback +", font=("Arial", self.FONT_SIZE))
-        self.btn_feedback_pos.configure(command=lambda: self.send_feebdack(True), state=ctk.DISABLED)
+        self.btn_feedback_pos.configure(command=lambda: self.send_feedback(True), state=ctk.DISABLED)
         self.btn_feedback_pos.grid(row=curr_row, column=0, pady=self.PAD_SMALL,padx=self.PAD_SMALL, sticky="e")
         self.btn_feedback_neg = ctk.CTkButton(input_frame, text="Feedback -", font=("Arial", self.FONT_SIZE))
-        self.btn_feedback_neg.configure(command=lambda: self.send_feebdack(False), state=ctk.DISABLED)
+        self.btn_feedback_neg.configure(command=lambda: self.send_feedback(False), state=ctk.DISABLED)
         self.btn_feedback_neg.grid(row=curr_row, column=1, pady=self.PAD_SMALL,padx=self.PAD_SMALL, sticky="w")
         curr_row += 1
         # buttons debug prints:
@@ -123,7 +126,7 @@ class MainUI(ctk.CTk):
 
     def _init_trainer_async(self):
         if self.dog_trainer is None:
-            self.dog_trainer : dog_trainer = dog_trainer(self.print_output, self.dd_model.get(), self.update_dog_state_text, self.dd_dc.get())
+            self.dog_trainer : dog_trainer = dog_trainer(self.print_output, self.dd_model.get(), self.update_dog_state_text, self.dd_dc.get(), self.ckb_auto_feedback.get())
         else:
             self.dog_trainer.sr_model = self.dd_model.get()
             self.dog_trainer.dog_controller = self.dd_dc.get()
@@ -145,11 +148,15 @@ class MainUI(ctk.CTk):
         if self.dog_trainer is not None:
             self.dog_trainer.stop_all()
 
+    def on_auto_feedback_clicked(self):
+        if self.dog_trainer is not None:
+            self.dog_trainer.auto_feedback = self.ckb_auto_feedback.get()
+
     def unlock_feedback(self):
         self.btn_feedback_pos.configure(state=ctk.NORMAL)
         self.btn_feedback_neg.configure(state=ctk.NORMAL)
 
-    def send_feebdack(self, feedback: bool):
+    def send_feedback(self, feedback: bool):
         self.btn_feedback_pos.configure(state=ctk.DISABLED)
         self.btn_feedback_neg.configure(state=ctk.DISABLED)
         self.dog_trainer.feedback = feedback

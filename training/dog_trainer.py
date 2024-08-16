@@ -2,6 +2,7 @@ from argparse import Action
 from time import sleep
 
 from numpy import add
+from sympy import true
 import custom_speech_recognition.speech_recognition as sr
 import custom_llm.llm_api as llm_api
 import enum
@@ -39,6 +40,7 @@ class dog_trainer:
         self.feedback: bool = False
         self.is_running = True
         self.threads = {}
+        self.auto_feedback = False
 
     def _print(self, text, source="DT", color="white"):
         self._print_cb(text,source, color)
@@ -193,13 +195,32 @@ class dog_trainer:
         self.dc.wait_for_idle.wait()
         self.dc.wait_for_idle.clear()
         # get feedback from user
-        self._print("Waiting for feedback...")
-        if feedback_unlock_cb is not None:
-            feedback_unlock_cb()
-        self.wait_for_feedback.wait()
-        if not self.sr.is_running:
-            print("Cancelled training step.")
-            return
+        if self.auto_feedback:
+            # auto feedback with speech recognition
+            pass
+            while True:
+                # record once
+                self.sr.thread_event.set()
+                self.sr.data_ready.wait()
+                self.sr.data_ready.clear()
+                self._print("Feedback recognized: " + self.sr.data)
+                # check for positive feedback
+                if "gut" in self.sr.data.lower() or "gemacht" in self.sr.data.lower():
+                    self.feedback = True
+                    self._print("Positive feedback recognized.", color="yellow")
+                    break
+                # check for negative feedback
+                if "nein" in self.sr.data.lower() or "falsch" in self.sr.data.lower():
+                    self.feedback = False
+                    self._print("Negative feedback recognized.", color="yellow")
+                    break
+        else:
+            # feedback with buttons
+            self._print("Waiting for feedback...")
+            if feedback_unlock_cb is not None:
+                feedback_unlock_cb()
+            self.wait_for_feedback.wait()
+            self.wait_for_feedback.clear()
         self._print("Feedback received.")
         self._print(f"Feedback: {data} => {command} was {self.feedback}")
         self.llm.add_context(data, command, self.feedback)
