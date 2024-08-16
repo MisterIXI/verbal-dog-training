@@ -161,8 +161,7 @@ class MainUI(ctk.CTk):
             is_running = False
             self.btn_load_step.configure(state=ctk.DISABLED)
             if self.ckb_auto_mode.get():
-                while True:
-                    self.dog_trainer.wait_for_hotword()
+                self.dog_trainer.wait_for_hotword()
             self.dog_trainer.train_step(self.unlock_feedback)
             if self.ckb_auto_mode.get():
                 is_running = True
