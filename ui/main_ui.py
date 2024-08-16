@@ -86,6 +86,10 @@ class MainUI(ctk.CTk):
         # auto feedback
         self.ckb_auto_feedback = ctk.CTkCheckBox(input_frame, text="Auto Feedback", font=("Arial", self.FONT_SIZE), command=self.on_auto_feedback_clicked)
         self.ckb_auto_feedback.grid(row=curr_row, column=1, pady=self.PAD_SMALL, padx=self.PAD_SMALL, sticky="w")
+        self.ckb_use_hotword = ctk.CTkCheckBox(input_frame, text="Use Hotword", font=("Arial", self.FONT_SIZE))
+        self.ckb_use_hotword.grid(row=curr_row, column=0, pady=self.PAD_SMALL, padx=self.PAD_SMALL, sticky="e")
+        self.ckb_use_hotword.select()
+        curr_row += 1
         # buttons feedback
         self.btn_feedback_pos = ctk.CTkButton(input_frame, text="Feedback +", font=("Arial", self.FONT_SIZE))
         self.btn_feedback_pos.configure(command=lambda: self.send_feedback(True), state=ctk.DISABLED)
@@ -112,13 +116,25 @@ class MainUI(ctk.CTk):
         dogstate_frame.grid(row=1, column=0, sticky="nsew", padx=self.PAD_LARGE, pady=self.PAD_LARGE)
         dogstate_frame.grid_columnconfigure(0, weight=1)
         dogstate_frame.grid_columnconfigure(1, weight=1)
+        curr_row = 0
+        # title
         state_title = ctk.CTkLabel(dogstate_frame, text="Dog State", font=("Arial", self.HEADER_SIZE))
-        state_title.grid(row=0, column=0, columnspan=2, pady=self.PAD_LARGE)
+        state_title.grid(row=curr_row, column=0, columnspan=2, pady=self.PAD_LARGE)
+        curr_row += 1
+        # Dog trainer state
+        state_label = ctk.CTkLabel(dogstate_frame, text="Trainer state:", font=("Arial", self.FONT_SIZE))
+        state_label.grid(row=curr_row, column=0,sticky="e")
+        self.lb_trainer_state = ctk.CTkLabel(dogstate_frame, text="Idle", font=("Arial", self.FONT_SIZE))
+        self.lb_trainer_state.grid(row=curr_row, column=1, sticky="w",padx=self.PAD_SMALL)
+        self.set_trainer_state("Idle", "green")
+        curr_row += 1
+        # Dog action state
         state_label = ctk.CTkLabel(dogstate_frame, text="Dog state:", font=("Arial", self.FONT_SIZE))
-        state_label.grid(row=1, column=0,sticky="e")
+        state_label.grid(row=curr_row, column=0,sticky="e")
         self.state_text = ctk.CTkLabel(dogstate_frame, text="Idle", font=("Arial", self.FONT_SIZE))
-        self.state_text.grid(row=1, column=1, sticky="w",padx=self.PAD_SMALL)
+        self.state_text.grid(row=curr_row, column=1, sticky="w",padx=self.PAD_SMALL)
         self.state_text.configure(text_color="green")
+        curr_row += 1
 
     def init_trainer(self):
         self.btn_load_step.configure(state=ctk.DISABLED)
@@ -126,7 +142,9 @@ class MainUI(ctk.CTk):
 
     def _init_trainer_async(self):
         if self.dog_trainer is None:
-            self.dog_trainer : dog_trainer = dog_trainer(self.print_output, self.dd_model.get(), self.update_dog_state_text, self.dd_dc.get(), self.ckb_auto_feedback.get())
+            self.dog_trainer : dog_trainer = dog_trainer(self.print_output, self.dd_model.get(), self.update_dog_state_text, self.dd_dc.get())
+            self.dog_trainer.auto_feedback = self.ckb_auto_feedback.get()
+            self.dog_trainer.trainer_state_cb = self.set_trainer_state
         else:
             self.dog_trainer.sr_model = self.dd_model.get()
             self.dog_trainer.dog_controller = self.dd_dc.get()
@@ -161,16 +179,19 @@ class MainUI(ctk.CTk):
         self.btn_feedback_neg.configure(state=ctk.DISABLED)
         self.dog_trainer.feedback = feedback
         self.dog_trainer.wait_for_feedback.set()
-
+        
+    def set_trainer_state(self, text: str, color: str="green"):
+        self.lb_trainer_state.configure(text=text, text_color=color)
+    
     def training_loop(self):
         is_running = True
         while is_running and self.dog_trainer.is_running:
             is_running = False
             self.btn_load_step.configure(state=ctk.DISABLED)
-            if self.ckb_auto_mode.get():
+            if self.ckb_use_hotword.get(): # use hotword
                 self.dog_trainer.wait_for_hotword()
             self.dog_trainer.train_step(self.unlock_feedback)
-            if self.ckb_auto_mode.get():
+            if self.ckb_auto_mode.get(): # full auto mode
                 is_running = True
         if self.dog_trainer.is_running:                
             self.btn_load_step.configure(state=ctk.NORMAL)

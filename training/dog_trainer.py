@@ -41,6 +41,7 @@ class dog_trainer:
         self.is_running = True
         self.threads = {}
         self.auto_feedback = False
+        self.trainer_state_cb = None
 
     def _print(self, text, source="DT", color="white"):
         self._print_cb(text,source, color)
@@ -107,7 +108,7 @@ class dog_trainer:
     def wait_for_hotword(self):
         assert self.is_all_loaded(), "Not all components are loaded."
         self._print("Waiting for hotword...", color="yellow")
-        
+        self.trainer_state_update("Waiting for hotword...", "yellow")
         # loop until hotword is detected
         # TODO: Light up cheecks to signal ready for hotword 
         while True:
@@ -123,6 +124,7 @@ class dog_trainer:
         assert self.is_all_loaded(), "Not all components are loaded."
         # Voice recognition
         # start listening and wait for data
+        self.trainer_state_update("Listening for command...", "yellow")
         self._print("Triggering voice recognition...")
         self.dc.set_action(actions.Action.attention)
         self.sr.thread_event.set()
@@ -138,6 +140,7 @@ class dog_trainer:
             return
         self._print("Voice recognition finished.")
         self._print("Recognized: " + data,color="green")
+        self.trainer_state_update("Checking command...", "yellow")
         # check if command is in confirmed dict
         self._print("Checking if command is in confirmed dict...")
         command = None
@@ -163,6 +166,7 @@ class dog_trainer:
         # if prev didn't work: ask llm for command
         if command is None:
             self._print("Asking language model for command...")
+            self.trainer_state_update("Querying LLM...", "yellow")
             command = self.llm.trigger_prompt(data)
             self.llm.data_ready.wait()
             self.llm.data_ready.clear()
@@ -186,7 +190,8 @@ class dog_trainer:
             return
         action = actions.Action[command]
         # execute command
-        self._print(f"Executing command: {command}...")
+        self._print(f"Executing command: {command}...", color="yellow")
+        self.trainer_state_update("Executing command...", "yellow")
         if not self.dc.is_connected:
             self._print("Not connected to remote controller", "DC", "red")
             return
@@ -197,7 +202,7 @@ class dog_trainer:
         # get feedback from user
         if self.auto_feedback:
             # auto feedback with speech recognition
-            pass
+            self.trainer_state_update("Listening for feedback...", "yellow")
             while True:
                 # record once
                 self.sr.thread_event.set()
@@ -216,6 +221,7 @@ class dog_trainer:
                     break
         else:
             # feedback with buttons
+            self.trainer_state_update("Waiting for feedback BTN...", "yellow")
             self._print("Waiting for feedback...")
             if feedback_unlock_cb is not None:
                 feedback_unlock_cb()
@@ -235,6 +241,11 @@ class dog_trainer:
                 del self.learned_commands[data]
         # reset feedback event
         self.wait_for_feedback.clear()
+        self.trainer_state_update("Idle", "green")
+    
+    def trainer_state_update(self, state: str, color: str = "white"):
+        if self.trainer_state_cb is not None:
+            self.trainer_state_cb(state, color)
         
     def auto_training(self):
         self.load_all()
