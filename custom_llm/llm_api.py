@@ -77,7 +77,7 @@ class LLM_API:
             else:
                 self._print("Prompt received!")
             self.data_ready.clear()
-            self._print("Prompting with: " + self.prompt_text)
+            self._print("Prompting with: " + self.prompt_text, color="yellow")
             payload = self._create_payload(
                 self.preprompt, self.context, self.prompt_text, print_prompt=True)
             start_time = time.time()
