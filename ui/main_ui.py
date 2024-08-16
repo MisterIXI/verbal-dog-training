@@ -1,3 +1,4 @@
+from calendar import c
 from cgitb import text
 import customtkinter as ctk
 import _tkinter as tk
@@ -61,10 +62,14 @@ class MainUI(ctk.CTk):
         self.dd_model.grid(row=curr_row, column=1, sticky="w", padx=self.PAD_SMALL)
         sr_mic_label = ctk.CTkLabel(input_frame, text="Microphone:", font=("Arial", self.FONT_SIZE))
         curr_row += 1
-        sr_mic_label.grid(row=curr_row, column=0, sticky="e", padx=self.PAD_SMALL, pady=self.PAD_SMALL)
-        self.dd_mic = ctk.CTkOptionMenu(input_frame, values=["Default", "None"], font=("Arial", self.FONT_SIZE-1))
-        self.dd_mic.grid(row=curr_row, column=1, sticky="w", padx=self.PAD_SMALL)
-        curr_row += 1
+        ## TODO: Implement microphone selection (optional, since the default microphone is used)
+        # sr_mic_label.grid(row=curr_row, column=0, sticky="e", padx=self.PAD_SMALL, pady=self.PAD_SMALL)
+        # self.dd_mic = ctk.CTkOptionMenu(input_frame, values=["SR not loaded..."], font=("Arial", self.FONT_SIZE-1))
+        # self.dd_mic.grid(row=curr_row, column=1, sticky="w", padx=self.PAD_SMALL)
+        # curr_row += 1
+        # self.btn_mic_refresh = ctk.CTkButton(input_frame, text="Refresh", font=("Arial", self.FONT_SIZE), command=self.load_mics)
+        # self.btn_mic_refresh.grid(row=curr_row, column=1, sticky="w", padx=self.PAD_SMALL)
+        # curr_row += 1
         # DC selection
         dc_sel_label = ctk.CTkLabel(input_frame, text="Dog controller:", font=("Arial", self.FONT_SIZE))
         dc_sel_label.grid(row=curr_row, column=0, sticky="e", padx=self.PAD_SMALL, pady=self.PAD_SMALL)
@@ -155,6 +160,9 @@ class MainUI(ctk.CTk):
         while is_running and self.dog_trainer.is_running:
             is_running = False
             self.btn_load_step.configure(state=ctk.DISABLED)
+            if self.ckb_auto_mode.get():
+                while True:
+                    self.dog_trainer.wait_for_hotword()
             self.dog_trainer.train_step(self.unlock_feedback)
             if self.ckb_auto_mode.get():
                 is_running = True

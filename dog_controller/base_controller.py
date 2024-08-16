@@ -4,7 +4,7 @@ import threading as th
 import time
 import math
 import Pyro5.api as api
-from actions import DOG_DEFAULT_HEIGHT, FOOT_RAISE_HEIGHT, MODE_IDLE, MODE_STAND, MODE_WALK, Action, create_action_dict
+from actions import DOG_DEFAULT_HEIGHT, FOOT_RAISE_HEIGHT, MODE_HOLD, MODE_IDLE, MODE_STAND, MODE_WALK, Action, create_action_dict
 import robot_interface as go1
 
 @api.expose
@@ -41,9 +41,6 @@ class BaseController:
         self.udp.InitCmdData(self.cmd)
     
     def set_action(self, action: Action) -> str:
-        if self.current_action != Action.idle:
-            print("Cannot set action while current action is not idle")
-            return "Cannot set action while current action is not idle"
         if action is not Action:
             action = Action(action)
         self.next_action = action
@@ -166,9 +163,12 @@ class BaseController:
                         curr_time = 0
                         last_time = 0
                     else:
-                        # finished neither idle and return animation
-                        self.current_action = Action.return_to_idle
-                        print("Returning to idle")
+                        if curr_step[1] == MODE_HOLD and self.next_action == self.current_action:
+                            pass # hold action
+                        else:
+                            # finished neither idle and return animation
+                            self.current_action = Action.return_to_idle
+                            print("Returning to idle")
                         curr_list = self.action_dict[self.current_action].copy()
                         curr_step = curr_list.pop(0)
                         start_time = time.time()

@@ -102,14 +102,31 @@ class dog_trainer:
     def reset_data(self):
         self.learned_commands = {}
 
+    def wait_for_hotword(self):
+        assert self.is_all_loaded(), "Not all components are loaded."
+        self._print("Waiting for hotword...", color="yellow")
+        
+        # loop until hotword is detected
+        # TODO: Light up cheecks to signal ready for hotword 
+        while True:
+            self.sr.thread_event.set()
+            self.sr.data_ready.wait()
+            self.sr.data_ready.clear()
+            self._print("Detected words: " + self.sr.data)
+            if "Techie" in self.sr.data or "take it" in self.sr.data:
+                self._print("Hotword detected.", color="green")
+                break
+
     def train_step(self, feedback_unlock_cb: callable = None):
         assert self.is_all_loaded(), "Not all components are loaded."
         # Voice recognition
         # start listening and wait for data
         self._print("Triggering voice recognition...")
+        self.dc.set_action(actions.Action.attention)
         self.sr.thread_event.set()
         self.sr.data_ready.wait()
         self.sr.data_ready.clear()
+        self.dc.set_action(actions.Action.idle)
         if not self.sr.is_running:
             print("Cancelled training step.")
             return

@@ -76,11 +76,11 @@ class recognizer():
             raise ValueError("Model not found")
         return m_method, m_name
 
-    def listen_auto(self,  timeout: int = 5, model_override: Model = None):
+    def listen_auto(self,  timeout: int = 5, phrase_timelimit: int | None = None, model_override: Model = None):
         try:
             with sr.Microphone() as source:
                 self._print("Listening...")
-                audio = self.r.listen(source, timeout=timeout)
+                audio = self.r.listen(source, timeout=timeout, phrase_time_limit=phrase_timelimit)
                 self._print("Processing...")
         except sr.exceptions.WaitTimeoutError:
             self._print("Timeout error, cancelled listening.")

@@ -8,16 +8,18 @@ class Action(enum.Enum):
     # base actions
     return_to_idle = -1
     idle = 0
-    lie_down = 1
-    shake = 2
-    vibe_8 = 3
-    turn_360 = 4
+    attention = 1
+    lie_down = 2
+    shake = 3
+    vibe_8 = 4
+    turn_360 = 5
     # jump_lr = 5
 
 
 FOOT_RAISE_HEIGHT = 0.08
 DOG_DEFAULT_HEIGHT = 0.024
 DOG_LOWEST_HEIGHT = 0.010
+MODE_HOLD = -1
 MODE_IDLE = 0
 MODE_STAND = 1
 MODE_WALK = 2
@@ -27,6 +29,7 @@ MODE_FORCE_UP = 6
 
 def create_action_dict() -> tp.Dict[Action, tp.List[tp.Tuple]]:
     return {
+        # EULER (in rad): [roll, pitch, yaw]
         # format: Action: (hold_until, move_arr)
         # https://unitree-docs.readthedocs.io/en/latest/get_started/Go1_Edu.html#go1-sdk-highcmd-mode
         # move arr depends on the mode:
@@ -52,6 +55,11 @@ def create_action_dict() -> tp.Dict[Action, tp.List[tp.Tuple]]:
             (4, MODE_FORCE_DOWN),
             (5, MODE_FORCE_UP),
             (5.5, MODE_STAND, DOG_DEFAULT_HEIGHT, [0, 0, 0]),
+        ]),
+        Action.attention: ([
+            (0, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0, 0.785398, 0]),
+            (1, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0, 0.785398, 0]),
+            (1, MODE_HOLD)
         ]),
         Action.shake: ([
             (0, MODE_FORCE_UP, DOG_DEFAULT_HEIGHT,     [0, 0, 0]),
