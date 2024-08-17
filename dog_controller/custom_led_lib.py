@@ -69,7 +69,6 @@ class LedController:
             g (uint8): (0-255) green component
             b (uint8): (0-255) blue component
         """
-        self._check_and_stop_breathing()
         leds = self._get_empty_data()
         leds[led_id][0] = self._uint8_to_special_code(color[0])
         leds[led_id][1] = self._uint8_to_special_code(color[1])
@@ -77,7 +76,6 @@ class LedController:
         self._build_and_send_data(leds)
 
     def set_led_all(self, color: tuple[int, int, int]) -> None:
-        self._check_and_stop_breathing()
         r = self._uint8_to_special_code(color[0])
         g = self._uint8_to_special_code(color[1])
         b = self._uint8_to_special_code(color[2])
@@ -100,7 +98,6 @@ class LedController:
         if self.animation_thread is not None and self.animation_thread.is_alive():
             self.animation_thread_running = False
             self.animation_thread.join()
-        self.clear_led_all()
 
     def breathe_single_color(self, color: tuple[int, int, int], dimming_factor: float = 0.2, cycle_duration: float = 1) -> None:
         """Breathes with a single color that fades in and out according to the dimming factor.
