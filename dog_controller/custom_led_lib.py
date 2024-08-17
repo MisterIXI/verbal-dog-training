@@ -69,6 +69,7 @@ class LedController:
             g (uint8): (0-255) green component
             b (uint8): (0-255) blue component
         """
+        self._check_and_stop_breathing()
         leds = self._get_empty_data()
         leds[led_id][0] = self._uint8_to_special_code(color[0])
         leds[led_id][1] = self._uint8_to_special_code(color[1])
@@ -76,6 +77,7 @@ class LedController:
         self._build_and_send_data(leds)
 
     def set_led_all(self, color: tuple[int, int, int]) -> None:
+        self._check_and_stop_breathing()
         r = self._uint8_to_special_code(color[0])
         g = self._uint8_to_special_code(color[1])
         b = self._uint8_to_special_code(color[2])
@@ -86,12 +88,35 @@ class LedController:
         ])
 
     def clear_led_all(self) -> None:
+        self._check_and_stop_breathing()
         self.set_led_all(self.OFF)
 
     def _uint8_lerp(self, a: int, b: int, t: float) -> int:
         a = max(0, min(255, a))
         b = max(0, min(255, b))
         return int(max(0, min(255, a + (b - a) * t)))
+
+    def _check_and_stop_breathing(self):
+        if self.animation_thread is not None and self.animation_thread.is_alive():
+            self.animation_thread_running = False
+            self.animation_thread.join()
+        self.clear_led_all()
+
+    def breathe_single_color(self, color: tuple[int, int, int], dimming_factor: float = 0.2, cycle_duration: float = 1) -> None:
+        """Breathes with a single color that fades in and out according to the dimming factor.
+
+        Args:
+            color (tuple[int, int, int]): Color that gets faded
+            dimming_factor (float, optional): Factor that gets applied to the original color to get the second color. Defaults to 0.5.
+            cycle_duration (float, optional): Duration of one cycle (color A to B). Defaults to 1.
+        """
+        c_a = color
+        c_b = (
+            max(0, min(255, int(color[0] * dimming_factor))),
+            max(0, min(255, int(color[1] * dimming_factor))),
+            max(0, min(255, int(color[2] * dimming_factor))),
+        )
+        self.start_breathing_color(cycle_duration, c_a, c_b)
 
     def start_breathing_color(self, cycle_duration: float, colorA: tuple[int, int, int], colorB: tuple[int, int, int]) -> None:
         """Starts a breathing animation between two colors. The cycle_duration defines the time for one way of the cycle.
@@ -101,10 +126,7 @@ class LedController:
             colorA (tuple[int, int, int]): (values 0-255) RGB color A
             colorB (tuple[int, int, int]): (values 0-255) RGB color B
         """
-        if self.animation_thread is not None and self.animation_thread.is_alive():
-            self.animation_thread_running = False
-            self.animation_thread.join()
-
+        self._check_and_stop_breathing()
         self.animation_thread = th.Thread(
             target=self._continous_breathing, args=(cycle_duration, colorA, colorB))
         self.animation_thread_running = True

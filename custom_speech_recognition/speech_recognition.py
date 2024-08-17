@@ -19,6 +19,7 @@ class recognizer():
         self.r = sr.Recognizer()
         self.thread_event = th.Event()
         self.data_ready = th.Event()
+        self.finished_listening = th.Event()
         self.is_running = True
         self.init_model()
 
@@ -85,6 +86,7 @@ class recognizer():
             self._print("Timeout error, cancelled listening.")
             self.data = ""
             return
+        self.finished_listening.set()
         start_time = time.time()
         model = model_override if model_override else self.model
         m_method, m_name = self.match_model(model)

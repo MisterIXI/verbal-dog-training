@@ -119,17 +119,19 @@ class dog_trainer:
         self.trainer_state_update("Waiting for hotword...", "yellow")
         # loop until hotword is detected
         # TODO: Light up cheecks to signal ready for hotword 
-        self.led.start_breathing_color(1, (0, 0, 255), (0, 0, 50))
         while True:
             self._print("Waiting for SR...")
+            self.led.breathe_single_color(self.led.BLUE)
             self.sr.thread_event.set()
+            self.sr.finished_listening.wait()
+            self.sr.finished_listening.clear()
+            self.led.breathe_single_color(self.led.YELLOW)
             self.sr.data_ready.wait()
             self.sr.data_ready.clear()
             self._print("Detected words: " + self.sr.data)
             check = self.sr.data.lower()
             if "techie" in check or "take it" in check or "hey" in check:
                 self._print("Hotword detected.", color="green")
-                self.led.stop_breathing_color(wait_for_end=True)
                 break
 
     def train_step(self, feedback_unlock_cb: callable = None):
@@ -139,11 +141,14 @@ class dog_trainer:
         self.trainer_state_update("Listening for command...", "yellow")
         self._print("Triggering voice recognition...")
         self.dc.set_action(actions.Action.attention)
-        self.led.set_led_all(self.led.YELLOW)
+        self.led.breathe_single_color(self.led.BLUE)
         self.sr.thread_event.set()
+        self.sr.finished_listening.wait()
+        self.sr.finished_listening.clear()
+        self.dc.set_action(actions.Action.idle)
+        self.led.breathe_single_color(self.led.YELLOW)
         self.sr.data_ready.wait()
         self.sr.data_ready.clear()
-        self.dc.set_action(actions.Action.idle)
         if not self.sr.is_running:
             print("Cancelled training step.")
             self.trainer_state_update("Idle", "green")
@@ -158,7 +163,6 @@ class dog_trainer:
         self._print("Voice recognition finished.")
         self._print("Recognized: " + data,color="green")
         self.trainer_state_update("Checking command...", "yellow")
-        self.led.start_breathing_color(1, (0, 255, 0), (0, 0, 255))
         # check if command is in confirmed dict
         self._print("Checking if command is in confirmed dict...")
         command = None
@@ -205,10 +209,11 @@ class dog_trainer:
             self._print(f"Rolled: {old_command} => {command}")
         if command not in self.COMMANDS:
             self._print("Command not recognized. Cancelling training step...", color="red")
+            self.led.clear_led_all()
+            self.trainer_state_update("Idle", "green")
             return
         action = actions.Action[command]
-        self.led.stop_breathing_color(wait_for_end=True)
-        self.led.set_led_all(self.led.GREEN)
+        self.led.breathe_single_color(self.led.GREEN)
         # execute command
         self._print(f"Executing command: {command}...", color="yellow")
         self.trainer_state_update("Executing command...", "yellow")
