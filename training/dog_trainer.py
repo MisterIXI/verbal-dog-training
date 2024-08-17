@@ -145,7 +145,7 @@ class dog_trainer:
         self.sr.thread_event.set()
         self.sr.finished_listening.wait()
         self.sr.finished_listening.clear()
-        self.dc.set_action(actions.Action.idle)
+        self.dc.set_action(actions.Action.attention_cancel)
         self.led.breathe_single_color(self.led.YELLOW)
         self.sr.data_ready.wait()
         self.sr.data_ready.clear()
@@ -222,6 +222,7 @@ class dog_trainer:
             return
         self.dc.set_action(action)
         self._print(f"Waiting for idle from dog controller...")
+        self.dc.wait_for_idle.clear()
         self.dc.wait_for_idle.wait()
         self.dc.wait_for_idle.clear()
         self.dc.set_action(actions.Action.attention)
@@ -261,7 +262,7 @@ class dog_trainer:
             self.wait_for_feedback.clear()
         self._print("Feedback received.")
         self.led.clear_led_all()
-        self.dc.set_action(actions.Action.idle)
+        self.dc.set_action(actions.Action.attention_cancel)
         self._print(f"Feedback: {data} => {command} was {self.feedback}")
         self.llm.add_context(data, command, self.feedback)
         if self.feedback:
