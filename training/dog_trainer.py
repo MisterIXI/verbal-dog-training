@@ -12,6 +12,7 @@ from collections import defaultdict
 import random
 import dog_controller.pyro_connector as dc
 import dog_controller.actions as actions
+import dog_controller.custom_led_lib as led
 class t_state(enum.Enum):
     idle = 0
     listening = 1
@@ -42,6 +43,7 @@ class dog_trainer:
         self.threads = {}
         self.auto_feedback = False
         self.trainer_state_cb = None
+        self.led = led.LedController()
 
     def _print(self, text, source="DT", color="white"):
         self._print_cb(text,source, color)
@@ -111,6 +113,7 @@ class dog_trainer:
         self.trainer_state_update("Waiting for hotword...", "yellow")
         # loop until hotword is detected
         # TODO: Light up cheecks to signal ready for hotword 
+        self.led.start_breathing_color(1, (0, 0, 255), (0, 0, 150))
         while True:
             self.sr.thread_event.set()
             self.sr.data_ready.wait()
@@ -118,6 +121,7 @@ class dog_trainer:
             self._print("Detected words: " + self.sr.data)
             if "Techie" in self.sr.data or "take it" in self.sr.data:
                 self._print("Hotword detected.", color="green")
+                self.led.stop_breathing_color(wait_for_end=True)
                 break
 
     def train_step(self, feedback_unlock_cb: callable = None):
@@ -127,6 +131,7 @@ class dog_trainer:
         self.trainer_state_update("Listening for command...", "yellow")
         self._print("Triggering voice recognition...")
         self.dc.set_action(actions.Action.attention)
+        self.led.set_led_all(self.led.YELLOW)
         self.sr.thread_event.set()
         self.sr.data_ready.wait()
         self.sr.data_ready.clear()
@@ -143,6 +148,7 @@ class dog_trainer:
         self._print("Voice recognition finished.")
         self._print("Recognized: " + data,color="green")
         self.trainer_state_update("Checking command...", "yellow")
+        self.led.start_breathing_color(1, (0, 255, 0), (0, 0, 255))
         # check if command is in confirmed dict
         self._print("Checking if command is in confirmed dict...")
         command = None
@@ -191,6 +197,8 @@ class dog_trainer:
             self._print("Command not recognized. Cancelling training step...", color="red")
             return
         action = actions.Action[command]
+        self.led.stop_breathing_color(wait_for_end=True)
+        self.led.set_led_all(self.led.GREEN)
         # execute command
         self._print(f"Executing command: {command}...", color="yellow")
         self.trainer_state_update("Executing command...", "yellow")
@@ -201,6 +209,8 @@ class dog_trainer:
         self._print(f"Waiting for idle from dog controller...")
         self.dc.wait_for_idle.wait()
         self.dc.wait_for_idle.clear()
+        self.led.start_breathing_color(1, (0, 255, 0), (0, 150, 0))
+        self.dc.set_action(actions.Action.attention)
         # get feedback from user
         if self.auto_feedback:
             # auto feedback with speech recognition
@@ -230,6 +240,8 @@ class dog_trainer:
             self.wait_for_feedback.wait()
             self.wait_for_feedback.clear()
         self._print("Feedback received.")
+        self.dc.set_action(actions.Action.idle)
+        self.led.stop_breathing_color(wait_for_end=True)
         self._print(f"Feedback: {data} => {command} was {self.feedback}")
         self.llm.add_context(data, command, self.feedback)
         if self.feedback:
