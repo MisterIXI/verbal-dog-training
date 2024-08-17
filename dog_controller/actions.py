@@ -48,6 +48,11 @@ def create_action_dict() -> tp.Dict[Action, tp.List[tp.Tuple]]:
         Action.idle: ([
             (0, MODE_IDLE, DOG_DEFAULT_HEIGHT, [0, 0, 0]),
         ]),
+        Action.attention: ([
+            (0, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0, -0.0, 0]),
+            (1, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0, -0.65, 0]),
+            (120, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0, -0.65, 0]),
+        ]),
         Action.lie_down: ([
             (0, MODE_STAND, DOG_DEFAULT_HEIGHT, [0, 0, 0]),
             (1, MODE_FORCE_UP),
@@ -55,11 +60,6 @@ def create_action_dict() -> tp.Dict[Action, tp.List[tp.Tuple]]:
             (4, MODE_FORCE_DOWN),
             (5, MODE_FORCE_UP),
             (5.5, MODE_STAND, DOG_DEFAULT_HEIGHT, [0, 0, 0]),
-        ]),
-        Action.attention: ([
-            (0, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0, 0.785398, 0]),
-            (1, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0, 0.785398, 0]),
-            (1, MODE_HOLD)
         ]),
         Action.shake: ([
             (0, MODE_FORCE_UP, DOG_DEFAULT_HEIGHT,     [0, 0, 0]),
