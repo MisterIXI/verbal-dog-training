@@ -60,9 +60,9 @@ class MainUI(ctk.CTk):
         sr_model_label.grid(row=curr_row, column=0, sticky="e", padx=self.PAD_SMALL, pady=self.PAD_SMALL)
         self.dd_model = ctk.CTkOptionMenu(input_frame, values=[model.value for model in sr.Model], font=("Arial", self.FONT_SIZE-1))
         self.dd_model.grid(row=curr_row, column=1, sticky="w", padx=self.PAD_SMALL)
-        sr_mic_label = ctk.CTkLabel(input_frame, text="Microphone:", font=("Arial", self.FONT_SIZE))
         curr_row += 1
         ## TODO: Implement microphone selection (optional, since the default microphone is used)
+        sr_mic_label = ctk.CTkLabel(input_frame, text="Microphone:", font=("Arial", self.FONT_SIZE))
         # sr_mic_label.grid(row=curr_row, column=0, sticky="e", padx=self.PAD_SMALL, pady=self.PAD_SMALL)
         # self.dd_mic = ctk.CTkOptionMenu(input_frame, values=["SR not loaded..."], font=("Arial", self.FONT_SIZE-1))
         # self.dd_mic.grid(row=curr_row, column=1, sticky="w", padx=self.PAD_SMALL)
@@ -86,6 +86,7 @@ class MainUI(ctk.CTk):
         # auto feedback
         self.ckb_auto_feedback = ctk.CTkCheckBox(input_frame, text="Auto Feedback", font=("Arial", self.FONT_SIZE), command=self.on_auto_feedback_clicked)
         self.ckb_auto_feedback.grid(row=curr_row, column=1, pady=self.PAD_SMALL, padx=self.PAD_SMALL, sticky="w")
+        self.ckb_auto_feedback.select()
         self.ckb_use_hotword = ctk.CTkCheckBox(input_frame, text="Use Hotword", font=("Arial", self.FONT_SIZE))
         self.ckb_use_hotword.grid(row=curr_row, column=0, pady=self.PAD_SMALL, padx=self.PAD_SMALL, sticky="e")
         self.ckb_use_hotword.select()
