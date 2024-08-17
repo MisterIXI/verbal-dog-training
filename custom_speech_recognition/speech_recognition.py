@@ -6,8 +6,8 @@ import threading as th
 
 class Model(enum.Enum):
     """Enum for different models of the speech recognition library."""
-    W_T = "WH_tiny"
     W_D = "WH_default"
+    W_T = "WH_tiny"
     W_L = "WH_large"
 
 
@@ -41,7 +41,6 @@ class recognizer():
     def run(self):
         """When self.thread_event is set, listen for audio and recognize it in one step, then set self.data_ready once the data is ready."""
         self.init_model()
-        self.thread_event.clear()
         self.data_ready.clear()
         while self.is_running:
             # wait for thread event

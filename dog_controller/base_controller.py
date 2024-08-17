@@ -13,7 +13,7 @@ class BaseController:
         self.action_dict = create_action_dict()
         # Dog state
         self.current_action: Action = Action.idle
-        self.next_action: Action = Action.idle
+        self.next_action: Action | None = Action.idle
         self.mode = MODE_STAND
         self.angle_rad = 0
         self.yawspeed = 0
@@ -44,6 +44,7 @@ class BaseController:
         if action is not Action:
             action = Action(action)
         self.next_action = action
+        print("EXT: Action was set to: " + str(action))
         return "Action set to " + str(action)
     
     def start_loop(self) -> None:
@@ -72,6 +73,7 @@ class BaseController:
             self.lerp_float(a_vector[2], b_vector[2], t),
         ]
     def update_loop(self):
+        LOOP_DELAY = 0.01
         # for start, load the current action and start it from 0
         last_step = None
         curr_list = self.action_dict[self.current_action].copy()
@@ -126,12 +128,12 @@ class BaseController:
             # set cmd values and send
             self.cmd.mode = self.mode
             self.cmd.euler = self.euler
-            print(f"current euler: {self.euler}")
+            # print(f"current euler: {self.euler}")
             self.cmd.yawSpeed = self.yawspeed
             self.cmd.velocity = self.velocity
             self.cmd.footRaiseHeight = self.foot_raise_height
             self.cmd.bodyHeight = self.body_height
-            print(f"body_height: {self.body_height}")
+            # print(f"body_height: {self.body_height}")
             self.udp.SetSend(self.cmd)
             if self.current_action != Action.idle:
                 self.udp.Send()
@@ -139,7 +141,17 @@ class BaseController:
             self.get_state()
             # check if current step is done and move to the next one
             curr_time = time.time() - start_time
-            if curr_time >= curr_step[0]:
+            if self.next_action != None:
+                self.current_action = self.next_action
+                self.next_action = None
+                print("Starting action: " + str(self.current_action))
+                curr_list = self.action_dict[self.current_action].copy()
+                # check for hold in new action
+                curr_step = curr_list.pop(0)
+                start_time = time.time()
+                curr_time = 0
+                last_time = 0
+            elif curr_time >= curr_step[0]:
                 if len(curr_list) > 0:
                     last_time = curr_step[0]
                     last_step = curr_step
@@ -147,16 +159,7 @@ class BaseController:
                 else:
                     # finished with current action
                     if self.current_action == Action.idle:
-                        # if idle, loop until next action is set
-                        if self.next_action != Action.idle:
-                            self.current_action = self.next_action
-                            self.next_action = Action.idle
-                            print("Starting action: " + str(self.current_action))
-                            curr_list = self.action_dict[self.current_action].copy()
-                            curr_step = curr_list.pop(0)
-                            start_time = time.time()
-                            curr_time = 0
-                            last_time = 0
+                        pass
                     elif self.current_action == Action.return_to_idle:
                         self.current_action = Action.idle
                         print("Back to idle")
@@ -166,13 +169,8 @@ class BaseController:
                         curr_time = 0
                         last_time = 0
                     else:
-                        if curr_step[1] == MODE_HOLD:
-                            self.next_action = self.current_action
-                            pass # hold action
-                        else:
-                            # finished neither idle and return animation
-                            self.current_action = Action.return_to_idle
-                            print("Returning to idle")
+                        self.current_action = Action.idle
+                        print("Returning to idle")
                         curr_list = self.action_dict[self.current_action].copy()
                         curr_step = curr_list.pop(0)
                         start_time = time.time()
@@ -181,5 +179,5 @@ class BaseController:
             # else:
             #     print(f"time left: {curr_time}; {curr_step[0]}")
             # delay update very slightly
-            time.sleep(0.01)
+            time.sleep(LOOP_DELAY)
             

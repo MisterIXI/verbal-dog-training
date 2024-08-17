@@ -23,6 +23,11 @@ class t_state(enum.Enum):
 class dog_trainer:
     LEVENSHTEIN_THRESHOLD = 5
     COMMANDS = [str(action)[7:] for action in actions.Action if action.value > 0]
+    COMMANDS = [str(action)[7:] for action in [
+        actions.Action.lie_down,
+        actions.Action.shake,
+        actions.Action.vibe_8,
+    ]]
     def __init__(self, print_callback: callable, sr_model: str, state_callback: callable, dog_controller: str) -> None:
         print("Commands: ", self.COMMANDS)
         self.state_callback = state_callback
@@ -44,6 +49,7 @@ class dog_trainer:
         self.auto_feedback = False
         self.trainer_state_cb = None
         self.led = led.LedController()
+        self.led.clear_led_all()
 
     def _print(self, text, source="DT", color="white"):
         self._print_cb(text,source, color)
@@ -113,13 +119,15 @@ class dog_trainer:
         self.trainer_state_update("Waiting for hotword...", "yellow")
         # loop until hotword is detected
         # TODO: Light up cheecks to signal ready for hotword 
-        self.led.start_breathing_color(1, (0, 0, 255), (0, 0, 150))
+        self.led.start_breathing_color(1, (0, 0, 255), (0, 0, 50))
         while True:
+            self._print("Waiting for SR...")
             self.sr.thread_event.set()
             self.sr.data_ready.wait()
             self.sr.data_ready.clear()
             self._print("Detected words: " + self.sr.data)
-            if "Techie" in self.sr.data or "take it" in self.sr.data:
+            check = self.sr.data.lower()
+            if "techie" in check or "take it" in check or "hey" in check:
                 self._print("Hotword detected.", color="green")
                 self.led.stop_breathing_color(wait_for_end=True)
                 break
@@ -139,11 +147,13 @@ class dog_trainer:
         if not self.sr.is_running:
             print("Cancelled training step.")
             self.trainer_state_update("Idle", "green")
+            self.led.clear_led_all()
             return
         data = self.sr.data
         if data is None or data == "":
             self._print("No voice input received. Cancelling training step...")
             self.trainer_state_update("Idle", "green")
+            self.led.clear_led_all()
             return
         self._print("Voice recognition finished.")
         self._print("Recognized: " + data,color="green")
@@ -212,6 +222,7 @@ class dog_trainer:
         self.led.start_breathing_color(1, (0, 255, 0), (0, 150, 0))
         self.dc.set_action(actions.Action.attention)
         # get feedback from user
+        self._print("Waiting for feedback from user", "yellow")
         if self.auto_feedback:
             # auto feedback with speech recognition
             self.trainer_state_update("Listening for feedback...", "yellow")

@@ -8,13 +8,13 @@ class LedController:
         self.animation_thread = None
         self.animation_thread_running = False
         pass
-    
+
     WHITE = (255, 255, 255)
     RED = (255, 0, 0)
     GREEN = (0, 255, 0)
     BLUE = (0, 0, 255)
     YELLOW = (255, 255, 0)
-    
+    OFF = (0, 0, 0)
 
     UDP_IP = "192.168.123.13"
     UDP_PORT = 8889
@@ -23,7 +23,7 @@ class LedController:
     ZERO = "88888888"
     EMPTY = "00000000"
 
-    LED_CYCLE_SLEEP_DURATION = 0.1
+    LED_CYCLE_SLEEP_DURATION = 0.01
 
     def _uint8_to_special_code(self, value: int) -> str:
         """Convert a uint8 value to the special hex/binary code required for the UDP package.
@@ -35,8 +35,8 @@ class LedController:
             str: The 8 character long hex code to place in the UDP package
         """
         mask = format(value, '08b')
-        mask.replace("0", "8")
-        mask.replace("1", "e")
+        mask = mask.replace("0", "8")
+        mask = mask.replace("1", "e")
         return mask
 
     def _get_empty_data(self) -> str:
@@ -51,7 +51,7 @@ class LedController:
         data = ""
         for led in leds:
             for color in led:
-                data += color
+                data += str(color)
         return data
 
     def _build_and_send_data(self, data: list[list]) -> None:
@@ -60,7 +60,7 @@ class LedController:
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.sendto(bytes.fromhex(hex_string), (self.UDP_IP, self.UDP_PORT))
 
-    def set_led_single(self, led_id: int, r: int, g: int, b: int) -> None:
+    def set_led_single(self, led_id: int, color: tuple[int, int, int]) -> None:
         """Set a single led to a specified rgb color.
 
         Args:
@@ -70,15 +70,15 @@ class LedController:
             b (uint8): (0-255) blue component
         """
         leds = self._get_empty_data()
-        leds[led_id][0] = self._uint8_to_special_code(r)
-        leds[led_id][1] = self._uint8_to_special_code(g)
-        leds[led_id][2] = self._uint8_to_special_code(b)
+        leds[led_id][0] = self._uint8_to_special_code(color[0])
+        leds[led_id][1] = self._uint8_to_special_code(color[1])
+        leds[led_id][2] = self._uint8_to_special_code(color[2])
         self._build_and_send_data(leds)
 
-    def set_led_all(self, r: int, g: int, b: int) -> None:
-        r = self._uint8_to_special_code(r)
-        g = self._uint8_to_special_code(g)
-        b = self._uint8_to_special_code(b)
+    def set_led_all(self, color: tuple[int, int, int]) -> None:
+        r = self._uint8_to_special_code(color[0])
+        g = self._uint8_to_special_code(color[1])
+        b = self._uint8_to_special_code(color[2])
         self._build_and_send_data([
             [
                 r, g, b
@@ -86,7 +86,7 @@ class LedController:
         ])
 
     def clear_led_all(self) -> None:
-        self.set_led_all(0, 0, 0)
+        self.set_led_all(self.OFF)
 
     def _uint8_lerp(self, a: int, b: int, t: float) -> int:
         a = max(0, min(255, a))
@@ -138,11 +138,12 @@ class LedController:
         t = 0
         counting_up: bool = True
         while self.animation_thread_running:
-            self.set_led_all(
+            self.set_led_all((
+
                 self._uint8_lerp(a[0], b[0], t / cycle_duration),
                 self._uint8_lerp(a[1], b[1], t / cycle_duration),
                 self._uint8_lerp(a[2], b[2], t / cycle_duration),
-            )
+            ))
             sleep(self.LED_CYCLE_SLEEP_DURATION)
             if counting_up:
                 t += self.LED_CYCLE_SLEEP_DURATION
