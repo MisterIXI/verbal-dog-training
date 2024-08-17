@@ -133,10 +133,12 @@ class dog_trainer:
         self.dc.set_action(actions.Action.idle)
         if not self.sr.is_running:
             print("Cancelled training step.")
+            self.trainer_state_update("Idle", "green")
             return
         data = self.sr.data
         if data is None or data == "":
             self._print("No voice input received. Cancelling training step...")
+            self.trainer_state_update("Idle", "green")
             return
         self._print("Voice recognition finished.")
         self._print("Recognized: " + data,color="green")
