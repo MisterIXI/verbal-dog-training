@@ -100,12 +100,15 @@ class BaseController:
             if self.mode == MODE_IDLE:
                 pass
             elif self.mode == MODE_STAND:
-                if last_step is None:
+                if last_step is None or (last_step is not None and not(last_step[1] == MODE_STAND or last_step[1] == MODE_WALK)):
                     self.body_height = curr_step[2]
                     self.euler = curr_step[3]
-                else:
+                elif last_step[1] == MODE_STAND or last_step[1] == MODE_WALK:
                     self.body_height = self.lerp_float(last_step[2], curr_step[2], t)
                     self.euler = self.lerp_vector3(last_step[3], curr_step[3], t)
+                else:
+                    self.body_height = curr_step[2]
+                    self.euler = curr_step[3]
             elif self.mode == MODE_WALK:
                 # don't interpolate foot raise height, just set it to target
                 self.foot_raise_height = curr_step[5]
@@ -163,7 +166,8 @@ class BaseController:
                         curr_time = 0
                         last_time = 0
                     else:
-                        if curr_step[1] == MODE_HOLD and self.next_action == self.current_action:
+                        if curr_step[1] == MODE_HOLD:
+                            self.next_action = self.current_action
                             pass # hold action
                         else:
                             # finished neither idle and return animation
