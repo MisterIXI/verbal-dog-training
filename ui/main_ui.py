@@ -1,9 +1,11 @@
 from calendar import c
 from cgitb import text
+from turtle import st
 import customtkinter as ctk
 import _tkinter as tk
 from custom_speech_recognition import speech_recognition as sr
 from training.dog_trainer import dog_trainer, t_state
+from dog_controller.actions import Action
 import time
 import datetime
 import threading as th
@@ -123,19 +125,24 @@ class MainUI(ctk.CTk):
         state_title.grid(row=curr_row, column=0, columnspan=2, pady=self.PAD_LARGE)
         curr_row += 1
         # Dog trainer state
-        state_label = ctk.CTkLabel(dogstate_frame, text="Trainer state:", font=("Arial", self.FONT_SIZE))
+        state_label = ctk.CTkLabel(dogstate_frame, text="Current trainer state:", font=("Arial", self.FONT_SIZE))
         state_label.grid(row=curr_row, column=0,sticky="e")
         self.lb_trainer_state = ctk.CTkLabel(dogstate_frame, text="Idle", font=("Arial", self.FONT_SIZE))
         self.lb_trainer_state.grid(row=curr_row, column=1, sticky="w",padx=self.PAD_SMALL)
         self.set_trainer_state("Idle", "lightgreen")
         curr_row += 1
         # Dog action state
-        state_label = ctk.CTkLabel(dogstate_frame, text="Dog state:", font=("Arial", self.FONT_SIZE))
+        state_label = ctk.CTkLabel(dogstate_frame, text="Current dog state:", font=("Arial", self.FONT_SIZE))
         state_label.grid(row=curr_row, column=0,sticky="e")
         self.state_text = ctk.CTkLabel(dogstate_frame, text="Idle", font=("Arial", self.FONT_SIZE))
         self.state_text.grid(row=curr_row, column=1, sticky="w",padx=self.PAD_SMALL)
         self.state_text.configure(text_color="lightgreen")
         curr_row += 1
+        # Dog action manual override
+        self.dd_action_selection = ctk.CTkOptionMenu(dogstate_frame, values=[str(action)[7:] for action in Action], font=("Arial", self.FONT_SIZE-1))
+        self.dd_action_selection.grid(row=curr_row, column=0, sticky="e")
+        self.btn_action_override = ctk.CTkButton(dogstate_frame, text="Override", font=("Arial", self.FONT_SIZE), state=ctk.DISABLED)
+        self.btn_action_override.grid(row=curr_row, column=1, sticky="w", padx=self.PAD_SMALL)
 
     def init_trainer(self):
         self.btn_load_step.configure(state=ctk.DISABLED)
@@ -159,6 +166,7 @@ class MainUI(ctk.CTk):
         self.btn_db_negatives.configure(command=self.dog_trainer.print_learned_negatives, state=ctk.NORMAL)
         self.btn_db_prompt.configure(command=self.dog_trainer.llm_print_preprompt, state=ctk.NORMAL)
         self.btn_db_context.configure(command=self.dog_trainer.llm_print_context, state=ctk.NORMAL)
+        self.btn_action_override.configure(command=self.override_action, state=ctk.NORMAL)
 
     def on_start_button(self):
         th.Thread(target=self.training_loop).start()
@@ -196,7 +204,11 @@ class MainUI(ctk.CTk):
                 is_running = True
         if self.dog_trainer.is_running:                
             self.btn_load_step.configure(state=ctk.NORMAL)
-
+    
+    def override_action(self):
+        if self.dog_trainer.loaded["dc"]:
+            self.dog_trainer.dc.set_action(Action[self.dd_action_selection.get()])
+    
     def print_output(self, text: str, source: str = "UI", color="white"):
         if not self.winfo_exists():
             print("Tried to print to a non-existing window.")
