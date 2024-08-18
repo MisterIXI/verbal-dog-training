@@ -31,6 +31,8 @@ MODE_FORCE_UP = 6
 MODE_DANCE1 = 12
 MODE_DANCE2 = 13
 
+FULL_ROT_RAD = 6.283185 * 1.25 # multiply by offset to achieve full rotation
+
 
 def create_action_dict() -> tp.Dict[Action, tp.List[tp.Tuple]]:
     return {
@@ -72,14 +74,14 @@ def create_action_dict() -> tp.Dict[Action, tp.List[tp.Tuple]]:
         ]),
         Action.shake: ([
             (0, MODE_FORCE_UP, DOG_DEFAULT_HEIGHT,     [0, 0, 0]),
-            (0.5, MODE_STAND, DOG_DEFAULT_HEIGHT,   [0, 0, 0]),
-            (1.0, MODE_STAND, DOG_DEFAULT_HEIGHT,   [0.9, 0, 0]),
-            (2, MODE_STAND, DOG_DEFAULT_HEIGHT,     [-0.9, 0, 0]),
-            (3, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0.9, 0, 0]),
-            (4, MODE_STAND, DOG_DEFAULT_HEIGHT,     [-0.9, 0, 0]),
-            (5, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0.9, 0, 0]),
-            (5.5, MODE_STAND, DOG_DEFAULT_HEIGHT,   [0, 0, 0]),
-            (6.5, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0, 0, 0]),
+            (0.25, MODE_STAND, DOG_DEFAULT_HEIGHT,   [0, 0, 0]),
+            (0.75, MODE_STAND, DOG_DEFAULT_HEIGHT,   [0.9, 0, 0]),
+            (1.25, MODE_STAND, DOG_DEFAULT_HEIGHT,     [-0.9, 0, 0]),
+            (1.75, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0.9, 0, 0]),
+            (2.25, MODE_STAND, DOG_DEFAULT_HEIGHT,     [-0.9, 0, 0]),
+            (2.75, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0.9, 0, 0]),
+            (3, MODE_STAND, DOG_DEFAULT_HEIGHT,   [0, 0, 0]),
+            (3.5, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0, 0, 0]),
         ]),
         Action.vibe_8: ([
             (0, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0, 0, 0]),
@@ -102,17 +104,17 @@ def create_action_dict() -> tp.Dict[Action, tp.List[tp.Tuple]]:
         ]),
         Action.turn_360: ([
             (0, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0, 0, 0]),
-            (0.5, MODE_WALK, DOG_DEFAULT_HEIGHT, 0, [1, 0.5], FOOT_RAISE_HEIGHT),
-            (3, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0, 0, 0]),
+            (5, MODE_WALK, DOG_DEFAULT_HEIGHT, FULL_ROT_RAD/5.0, [0, 0], FOOT_RAISE_HEIGHT),
+            (5.5, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0, 0, 0]),
         ]),
         Action.dance_1: ([
             (0, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0, 0, 0]),
-            (2, MODE_DANCE1),
-            (8, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0, 0, 0]),
+            (3.5, MODE_DANCE1),
+            (4, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0, 0, 0]),
         ]),
         Action.dance_2: ([
             (0, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0, 0, 0]),
-            (2, MODE_DANCE2),
-            (8, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0, 0, 0]),
+            (4, MODE_DANCE2),
+            (4.5, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0, 0, 0]),
         ]),
     }

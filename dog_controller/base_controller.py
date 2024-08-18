@@ -73,7 +73,7 @@ class BaseController:
             self.lerp_float(a_vector[2], b_vector[2], t),
         ]
     def update_loop(self):
-        LOOP_DELAY = 0.01
+        LOOP_DELAY = 0.001
         # for start, load the current action and start it from 0
         last_step = None
         curr_list = self.action_dict[self.current_action].copy()
@@ -92,6 +92,7 @@ class BaseController:
             # print(f"t: {t}")
             # check for mode and set all values correctly
             self.mode = curr_step[1]
+            self.gaitType = 0
             # reset all values to default
             self.euler = [0, 0, 0]
             self.yawspeed = 0
@@ -105,26 +106,31 @@ class BaseController:
                 if last_step is None or (last_step is not None and not(last_step[1] == MODE_STAND or last_step[1] == MODE_WALK)):
                     self.body_height = curr_step[2]
                     self.euler = curr_step[3]
-                elif last_step[1] == MODE_STAND or last_step[1] == MODE_WALK:
+                elif last_step[1] == MODE_STAND:
                     self.body_height = self.lerp_float(last_step[2], curr_step[2], t)
                     self.euler = self.lerp_vector3(last_step[3], curr_step[3], t)
                 else:
                     self.body_height = curr_step[2]
                     self.euler = curr_step[3]
             elif self.mode == MODE_WALK:
+                self.gaitType = 1
                 # don't interpolate foot raise height, just set it to target
                 self.foot_raise_height = curr_step[5]
-                if last_step is None:
+                if last_step is None or last_step[1] != MODE_WALK:
                     self.body_height = curr_step[2]
-                    self.angle_rad = curr_step[3]
+                    # self.angle_rad = curr_step[3]
+                    self.yawspeed = curr_step[3]
                     self.velocity = curr_step[4]
                 else:
-                    self.body_height = self.lerp_float(last_step[2], curr_step[2], t)
+                    self.body_height = self.lerp_vector2(last_step[2], curr_step[2], t)
                     # difference in angle
-                    angle_diff = math.radians(curr_step[3] - last_step[3])
+                    # angle_diff = math.radians(curr_step[3] - last_step[3])
                     # calculate raidans per second turnspeed
-                    self.yawspeed = angle_diff / (curr_step[0] - last_step[0])
+                    # self.yawspeed = angle_diff / (curr_step[0] - last_step[0])
+                    self.yawspeed = curr_step[3]
                     self.velocity = curr_step[4]
+                print(f"yawspeed: {self.yawspeed}")
+            self.cmd.gaitType = self.gaitType
             # set cmd values and send
             self.cmd.mode = self.mode
             self.cmd.euler = self.euler
@@ -148,6 +154,7 @@ class BaseController:
                 curr_list = self.action_dict[self.current_action].copy()
                 # check for hold in new action
                 curr_step = curr_list.pop(0)
+                last_step = None
                 start_time = time.time()
                 curr_time = 0
                 last_time = 0
@@ -165,6 +172,7 @@ class BaseController:
                         print("Back to idle")
                         curr_list = self.action_dict[self.current_action].copy()
                         curr_step = curr_list.pop(0)
+                        last_step = None
                         start_time = time.time()
                         curr_time = 0
                         last_time = 0
@@ -173,6 +181,7 @@ class BaseController:
                         print("Returning to idle")
                         curr_list = self.action_dict[self.current_action].copy()
                         curr_step = curr_list.pop(0)
+                        last_step = None
                         start_time = time.time()
                         curr_time = 0
                         last_time = 0
