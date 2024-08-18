@@ -206,7 +206,7 @@ class MainUI(ctk.CTk):
             self.btn_load_step.configure(state=ctk.NORMAL)
     
     def override_action(self):
-        if self.dog_trainer.loaded["dc"]:
+        if self.dog_trainer.loaded["DC"]:
             self.dog_trainer.dc.set_action(Action[self.dd_action_selection.get()])
     
     def print_output(self, text: str, source: str = "UI", color="white"):
