@@ -85,6 +85,8 @@ class recognizer():
         except sr.exceptions.WaitTimeoutError:
             self._print("Timeout error, cancelled listening.")
             self.data = ""
+            self.finished_listening.set()
+            self.data_ready.set()
             return
         self.finished_listening.set()
         start_time = time.time()
