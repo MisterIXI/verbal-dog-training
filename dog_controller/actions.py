@@ -14,6 +14,8 @@ class Action(enum.Enum):
     shake = 4
     vibe_8 = 5
     turn_360 = 6
+    dance_1 = 7
+    dance_2 = 8
     # jump_lr = 5
 
 
@@ -26,6 +28,8 @@ MODE_STAND = 1
 MODE_WALK = 2
 MODE_FORCE_DOWN = 5
 MODE_FORCE_UP = 6
+MODE_DANCE1 = 12
+MODE_DANCE2 = 13
 
 
 def create_action_dict() -> tp.Dict[Action, tp.List[tp.Tuple]]:
@@ -70,10 +74,10 @@ def create_action_dict() -> tp.Dict[Action, tp.List[tp.Tuple]]:
             (0, MODE_FORCE_UP, DOG_DEFAULT_HEIGHT,     [0, 0, 0]),
             (0.5, MODE_STAND, DOG_DEFAULT_HEIGHT,   [0, 0, 0]),
             (1.0, MODE_STAND, DOG_DEFAULT_HEIGHT,   [0.9, 0, 0]),
-            (1.01, MODE_STAND, DOG_DEFAULT_HEIGHT,     [-0.9, 0, 0]),
-            (3.9, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0.9, 0, 0]),
+            (2, MODE_STAND, DOG_DEFAULT_HEIGHT,     [-0.9, 0, 0]),
+            (3, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0.9, 0, 0]),
             (4, MODE_STAND, DOG_DEFAULT_HEIGHT,     [-0.9, 0, 0]),
-            (5, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0.6, 0, 0]),
+            (5, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0.9, 0, 0]),
             (5.5, MODE_STAND, DOG_DEFAULT_HEIGHT,   [0, 0, 0]),
             (6.5, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0, 0, 0]),
         ]),
@@ -100,5 +104,15 @@ def create_action_dict() -> tp.Dict[Action, tp.List[tp.Tuple]]:
             (0, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0, 0, 0]),
             (0.5, MODE_WALK, DOG_DEFAULT_HEIGHT, 0, [1, 0.5], FOOT_RAISE_HEIGHT),
             (3, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0, 0, 0]),
+        ]),
+        Action.dance_1: ([
+            (0, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0, 0, 0]),
+            (2, MODE_DANCE1),
+            (8, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0, 0, 0]),
+        ]),
+        Action.dance_2: ([
+            (0, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0, 0, 0]),
+            (2, MODE_DANCE2),
+            (8, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0, 0, 0]),
         ]),
     }
