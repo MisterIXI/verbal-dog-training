@@ -127,14 +127,14 @@ class MainUI(ctk.CTk):
         state_label.grid(row=curr_row, column=0,sticky="e")
         self.lb_trainer_state = ctk.CTkLabel(dogstate_frame, text="Idle", font=("Arial", self.FONT_SIZE))
         self.lb_trainer_state.grid(row=curr_row, column=1, sticky="w",padx=self.PAD_SMALL)
-        self.set_trainer_state("Idle", "green")
+        self.set_trainer_state("Idle", "lightgreen")
         curr_row += 1
         # Dog action state
         state_label = ctk.CTkLabel(dogstate_frame, text="Dog state:", font=("Arial", self.FONT_SIZE))
         state_label.grid(row=curr_row, column=0,sticky="e")
         self.state_text = ctk.CTkLabel(dogstate_frame, text="Idle", font=("Arial", self.FONT_SIZE))
         self.state_text.grid(row=curr_row, column=1, sticky="w",padx=self.PAD_SMALL)
-        self.state_text.configure(text_color="green")
+        self.state_text.configure(text_color="lightgreen")
         curr_row += 1
 
     def init_trainer(self):
@@ -181,7 +181,7 @@ class MainUI(ctk.CTk):
         self.dog_trainer.feedback = feedback
         self.dog_trainer.wait_for_feedback.set()
         
-    def set_trainer_state(self, text: str, color: str="green"):
+    def set_trainer_state(self, text: str, color: str="lightgreen"):
         self.lb_trainer_state.configure(text=text, text_color=color)
     
     def training_loop(self):
@@ -217,7 +217,7 @@ class MainUI(ctk.CTk):
         
     def update_dog_state_text(self, state: text):
         if state == "idle":
-            self.state_text.configure(text=state, text_color="green")
+            self.state_text.configure(text=state, text_color="lightgreen")
         else:
             self.state_text.configure(text=state, text_color="yellow")
         

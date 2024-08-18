@@ -60,7 +60,7 @@ class dog_trainer:
         model = sr.Model(self.sr_model)
         self.sr: sr.recognizer = sr.recognizer(model, self._print_cb, "german")
         self.threads["SR"] = th.Thread(target=self.sr.run).start()
-        self._print("Finished loading speech recognition.", color="green")
+        self._print("Finished loading speech recognition.", color="lightgreen")
         self.loaded["SR"] = True
 
     def _load_llm(self):
@@ -71,7 +71,7 @@ class dog_trainer:
             self._print("Language model query could not be sent. Is the server running?", color="red")
             return
         self.threads["LLM"] = th.Thread(target=self.llm.prompt).start()
-        self._print("Finished loading language model.", color="green")
+        self._print("Finished loading language model.", color="lightgreen")
         self.loaded["LLM"] = True
 
     def _load_dc(self):
@@ -95,7 +95,7 @@ class dog_trainer:
         if not self.dc.is_connected:
             self._print("Could not connect to remote controller", "DT", "red")
             return
-        self._print("Finished loading dog controller.", color="green")
+        self._print("Finished loading dog controller.", color="lightgreen")
         self.loaded["DC"] = True
 
     def load_all(self):
@@ -131,7 +131,7 @@ class dog_trainer:
             self._print("Detected words: " + self.sr.data)
             check = self.sr.data.lower()
             if "techie" in check or "take it" in check or "hey" in check:
-                self._print("Hotword detected.", color="green")
+                self._print("Hotword detected.", color="lightgreen")
                 break
 
     def train_step(self, feedback_unlock_cb: callable = None):
@@ -151,17 +151,17 @@ class dog_trainer:
         self.sr.data_ready.clear()
         if not self.sr.is_running:
             print("Cancelled training step.")
-            self.trainer_state_update("Idle", "green")
+            self.trainer_state_update("Idle", "lightgreen")
             self.led.clear_led_all()
             return
         data = self.sr.data
         if data is None or data == "":
             self._print("No voice input received. Cancelling training step...")
-            self.trainer_state_update("Idle", "green")
+            self.trainer_state_update("Idle", "lightgreen")
             self.led.clear_led_all()
             return
         self._print("Voice recognition finished.")
-        self._print("Recognized: " + data,color="green")
+        self._print("Recognized: " + data,color="lightgreen")
         self.trainer_state_update("Checking command...", "yellow")
         # check if command is in confirmed dict
         self._print("Checking if command is in confirmed dict...")
@@ -210,7 +210,7 @@ class dog_trainer:
         if command not in self.COMMANDS:
             self._print("Command not recognized. Cancelling training step...", color="red")
             self.led.clear_led_all()
-            self.trainer_state_update("Idle", "green")
+            self.trainer_state_update("Idle", "lightgreen")
             return
         action = actions.Action[command]
         self.led.breathe_single_color(self.led.GREEN)
@@ -276,7 +276,7 @@ class dog_trainer:
                 del self.learned_commands[data]
         # reset feedback event
         self.wait_for_feedback.clear()
-        self.trainer_state_update("Idle", "green")
+        self.trainer_state_update("Idle", "lightgreen")
     
     def trainer_state_update(self, state: str, color: str = "white"):
         if self.trainer_state_cb is not None:
