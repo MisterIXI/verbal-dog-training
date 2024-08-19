@@ -62,7 +62,7 @@ def create_action_dict() -> tp.Dict[Action, tp.List[tp.Tuple]]:
         ]),
         Action.attention_cancel: ([
             (0, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0, -0.65, 0]),
-            (1.5, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0, 0.0, 0]),
+            (2, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0, 0.0, 0]),
         ]),
         Action.lie_down: ([
             (0, MODE_STAND, DOG_DEFAULT_HEIGHT, [0, 0, 0]),
