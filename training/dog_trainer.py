@@ -50,6 +50,8 @@ class dog_trainer:
         self.trainer_state_cb = None
         self.led = led.LedController()
         self.led.clear_led_all()
+        self.total_positives = 0
+        self.total_negatives = 0
 
     def _print(self, text, source="DT", color="white"):
         self._print_cb(text,source, color)
@@ -269,11 +271,13 @@ class dog_trainer:
             if command in self.learned_negatives[data]:
                 self.learned_negatives[data].remove(command)
             self.learned_commands[data] = command
+            self.total_positives += 1
         else:
             self.learned_negatives[data].append(command)
             # when negative and command was previously learned: remove from learned commands
             if data in self.learned_commands:
                 del self.learned_commands[data]
+            self.total_negatives += 1
         # reset feedback event
         self.wait_for_feedback.clear()
         # visual feedback feedback
@@ -284,6 +288,7 @@ class dog_trainer:
         sleep(3)
         self.led.clear_led_all()
         self.trainer_state_update("Idle", "lightgreen")
+        self._print(f"Total positives: {self.total_positives}, Total negatives: {self.total_negatives}", color="lightgreen")
         sleep(2)
     
     def trainer_state_update(self, state: str, color: str = "white"):
