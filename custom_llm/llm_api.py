@@ -124,18 +124,15 @@ class LLM_API:
             case 1:
                 return "This is a conversation between User and Llama, a friendly and precise chatbot. Llama is a precise LLM, which takes context of old commands and actions together with the current command to figure out one action to execute. It never fails to answer prompts with the best possible option with the provided context.\nThe context provided will have the following formate: {prompt: command: correct}\nPrompt is the text that was prompted to Llama, command is the command that was chosen by Llama and correct is a boolean value that tells if the command chosen was correct or not.\n" + command_prompt
             case 2:
-                return "This is a conversation between User and Llama, a precise and friendly chatbot designed to execute commands accurately based on context.\n\
+                return "This is a conversation between User and Llama, a precise chatbot designed to execute commands accurately based on context.\n\
                 Llama analyzes past commands and current prompts to determine the most appropriate action to take. Each command provided in the context will be associated with its correctness.\n\
                 The context provided will have the following format: {prompt: command: correct}\n\
                 Prompt: The text presented to Llama.\n\
                 Command: The action chosen by Llama.\n\
                 Correct: A boolean indicating whether the chosen action was correct or not.\n\
-                The possible commands are: [platz, tanzen, maennchen]\n\
                 - {platz: platz: True} - The user said 'platz', Llama chose 'platz', and this was the correct action.\n\
                 - {beweg dich: maennchen: False} - The user said 'beweg dich', Llama chose 'maennchen', but this was not the correct action.\n\
-                - {runter: platz: True} - The user said 'runter', Llama chose 'platz', and this was the correct action.\n\
-                - {tanzen: tanzen: True} - The user said 'tanzen', Llama chose 'tanzen', and this was the correct action.\n\
-                Here is the context provided to Llama:\n"
+                - {runter: platz: True} - The user said 'runter', Llama chose 'platz', and this was the correct action.\n" + command_prompt
             case _:
                 raise ValueError("Invalid id")
     def _build_context(self, context: dict) -> str:
