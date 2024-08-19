@@ -69,7 +69,7 @@ class BaseController:
     def lerp_vector3(self, a_vector, b_vector, t):
         return [
             self.lerp_float(a_vector[0], b_vector[0], t),
-            self.lerp_float(a_vector[1], b_vector[2], t),
+            self.lerp_float(a_vector[1], b_vector[1], t),
             self.lerp_float(a_vector[2], b_vector[2], t),
         ]
     def update_loop(self):
@@ -122,14 +122,13 @@ class BaseController:
                     self.yawspeed = curr_step[3]
                     self.velocity = curr_step[4]
                 else:
-                    self.body_height = self.lerp_vector2(last_step[2], curr_step[2], t)
+                    self.body_height = self.lerp_float(last_step[2], curr_step[2], t)
                     # difference in angle
                     # angle_diff = math.radians(curr_step[3] - last_step[3])
                     # calculate raidans per second turnspeed
                     # self.yawspeed = angle_diff / (curr_step[0] - last_step[0])
                     self.yawspeed = curr_step[3]
                     self.velocity = curr_step[4]
-                print(f"yawspeed: {self.yawspeed}")
             self.cmd.gaitType = self.gaitType
             # set cmd values and send
             self.cmd.mode = self.mode
