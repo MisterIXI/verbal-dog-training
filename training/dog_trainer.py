@@ -22,11 +22,11 @@ class t_state(enum.Enum):
 
 class dog_trainer:
     LEVENSHTEIN_THRESHOLD = 5
-    COMMANDS = [str(action)[7:] for action in actions.Action if action.value > 0]
+    # COMMANDS = [str(action)[7:] for action in actions.Action if action.value > 0]
     COMMANDS = [str(action)[7:] for action in [
         actions.Action.lie_down,
         actions.Action.shake,
-        actions.Action.vibe_8,
+        actions.Action.happy,
     ]]
     def __init__(self, print_callback: callable, sr_model: str, state_callback: callable, dog_controller: str) -> None:
         print("Commands: ", self.COMMANDS)
