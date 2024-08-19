@@ -276,7 +276,15 @@ class dog_trainer:
                 del self.learned_commands[data]
         # reset feedback event
         self.wait_for_feedback.clear()
+        # visual feedback feedback
+        if self.feedback:
+            self.led.start_breathing_color(0.25, self.led.GREEN, self.led.OFF)
+        else:
+            self.led.start_breathing_color(0.25, self.led.RED, self.led.OFF)
+        sleep(3)
+        self.led.clear_led_all()
         self.trainer_state_update("Idle", "lightgreen")
+        sleep(2)
     
     def trainer_state_update(self, state: str, color: str = "white"):
         if self.trainer_state_cb is not None:
