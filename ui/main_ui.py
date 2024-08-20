@@ -62,6 +62,7 @@ class MainUI(ctk.CTk):
         sr_model_label.grid(row=curr_row, column=0, sticky="e", padx=self.PAD_SMALL, pady=self.PAD_SMALL)
         self.dd_model = ctk.CTkOptionMenu(input_frame, values=[model.value for model in sr.Model], font=("Arial", self.FONT_SIZE-1))
         self.dd_model.grid(row=curr_row, column=1, sticky="w", padx=self.PAD_SMALL)
+        self.dd_model.set(sr.Model.W_Base.value)
         curr_row += 1
         ## TODO: Implement microphone selection (optional, since the default microphone is used)
         # sr_mic_label = ctk.CTkLabel(input_frame, text="Microphone:", font=("Arial", self.FONT_SIZE))
