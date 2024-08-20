@@ -180,7 +180,7 @@ class dog_trainer:
         if data in self.learned_commands:
             command = self.learned_commands[data]
             self._print("Found command in confirmed dict: " + command)
-        # if prev didn't work: levenshtein distance to find closest command
+        # if prev didn't work: levenshtein distance to find closest confirmed command
         if command is None:
             self._print("Command not found in confirmed dict.")
             self._print("Calculating Levenshtein distance...")
@@ -214,12 +214,19 @@ class dog_trainer:
                 sleep(2)
                 return
             self._print("Language model returned: " + command)
-        # when negative command association is currently, roll randomly
+        # when the current command has a negative association with the prompt
         if command in self.learned_negatives[data]:
             old_command = command
-            self._print("Command is in negative list. Rolling randomly...", color="red")
-            command = self.COMMANDS[random.randint(0, len(self.COMMANDS)-1)]
-            self._print(f"Rolled: {old_command} => {command}")
+            self._print("Command is in negative list. Rerolling...", color="red")
+            available_commands = [com for com in self.COMMANDS if com not in self.learned_negatives[data]]
+            # if no commands are available, roll randomly
+            if len(available_commands) == 0:
+                self._print("No non-negative commands available. Rolling completely at random...", color="red")
+                command = random.choice(self.COMMANDS)
+            else:
+                self._print(f"Selecting from the remaining commands: {available_commands}")
+                command = random.choice(available_commands)
+            self._print(f"Command reroll: {old_command} -> {command}", color="lightgreen")
         if command not in self.COMMANDS:
             self._print("Command not recognized. Cancelling training step...", color="red")
             self.led.clear_led_all()
@@ -232,6 +239,7 @@ class dog_trainer:
         self.trainer_state_update("Executing command...", "yellow")
         if not self.dc.is_connected:
             self._print("Not connected to remote controller", "DC", "red")
+            self.trainer_state_update("Idle", "lightgreen")
             return
         self.dc.set_action(action)
         self._print(f"Waiting for idle from dog controller...")
