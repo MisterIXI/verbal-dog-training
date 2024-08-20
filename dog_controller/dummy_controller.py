@@ -130,21 +130,21 @@ class BaseController:
                     # self.yawspeed = angle_diff / (curr_step[0] - last_step[0])
                     self.yawspeed = curr_step[3]
                     self.velocity = curr_step[4]
-            self.cmd.gaitType = self.gaitType
-            # set cmd values and send
-            self.cmd.mode = self.mode
-            self.cmd.euler = self.euler
-            # print(f"current euler: {self.euler}")
-            self.cmd.yawSpeed = self.yawspeed
-            self.cmd.velocity = self.velocity
-            self.cmd.footRaiseHeight = self.foot_raise_height
-            self.cmd.bodyHeight = self.body_height
-            # print(f"body_height: {self.body_height}")
-            self.udp.SetSend(self.cmd)
-            if self.current_action != Action.idle:
-                self.udp.Send()
-            # receive state
-            self.get_state()
+            # self.cmd.gaitType = self.gaitType
+            # # set cmd values and send
+            # self.cmd.mode = self.mode
+            # self.cmd.euler = self.euler
+            # # print(f"current euler: {self.euler}")
+            # self.cmd.yawSpeed = self.yawspeed
+            # self.cmd.velocity = self.velocity
+            # self.cmd.footRaiseHeight = self.foot_raise_height
+            # self.cmd.bodyHeight = self.body_height
+            # # print(f"body_height: {self.body_height}")
+            # self.udp.SetSend(self.cmd)
+            # if self.current_action != Action.idle:
+            #     self.udp.Send()
+            # # receive state
+            # self.get_state()
             # check if current step is done and move to the next one
             curr_time = time.time() - start_time
             if self.next_action != None:
