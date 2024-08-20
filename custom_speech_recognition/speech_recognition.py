@@ -6,9 +6,12 @@ import threading as th
 
 class Model(enum.Enum):
     """Enum for different models of the speech recognition library."""
-    W_D = "WH_default"
     W_T = "WH_tiny"
+    W_B = "WH_base"
+    W_S = "WH_small"
+    W_M = "WH_medium"
     W_L = "WH_large"
+    # Vosk = "Vosk"
 
 
 class recognizer():
@@ -64,14 +67,23 @@ class recognizer():
             m_method = self.r.recognize_whisper
             m_name = "tiny"
             # case Model.W_D:
-        elif model == Model.W_D:
+        elif model == Model.W_B:
             m_method = self.r.recognize_whisper
             m_name = "base"
             # case Model.W_L:
+        elif model == Model.W_S:
+            m_method = self.r.recognize_whisper
+            m_name = "small"
+        elif model == Model.W_M:
+            m_method = self.r.recognize_whisper
+            m_name = "medium"
         elif model == Model.W_L:
             m_method = self.r.recognize_whisper
             m_name = "large"
             # case _:
+        # elif model == Model.Vosk:
+        #     m_method = self.r.recognize_vosk
+        #     m_name = ""
         else:
             raise ValueError("Model not found")
         return m_method, m_name
@@ -95,7 +107,10 @@ class recognizer():
         try:
             self._print(f"Recognizing using {model.value} model...")
             self._print(f"model: {m_name}, language: {self.language}")
-            text = m_method(audio, model=m_name, language=self.language)
+            if m_name == "":
+                text = m_method(audio, language=self.language)
+            else:
+                text = m_method(audio, model=m_name, language=self.language)
             # text = m_method(audio)
             # text = self.r.recognize_whisper(audio)
             self.data = text
