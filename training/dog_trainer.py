@@ -105,6 +105,7 @@ class dog_trainer:
     def load_all(self):
         self._print("Loading all...")
         self._print("Loading speech recognition...")
+        self._print("(This might download the specific model if loading for the first time and take a while.)")
         self._load_sr()
         self._print("Loading language model...")
         self._load_llm()
@@ -184,18 +185,27 @@ class dog_trainer:
         if command is None:
             self._print("Command not found in confirmed dict.")
             self._print("Calculating Levenshtein distance...")
-            min_dist = 100
-            closest_command = None
-            for key in self.learned_commands:
-                dist = lev.distance(data, key)
-                if dist < min_dist:
-                    min_dist = dist
-                    closest_command = self.learned_commands[key]
-            if min_dist < self.LEVENSHTEIN_THRESHOLD:
-                command = closest_command
-                self._print("Found closest command: " + command + " with distance: " + str(min_dist))
+            result = self.find_closest(data, self.learned_commands.keys())
+            if result is not None:
+                command = self.learned_commands[result]
+                self._print(f"Found closest command: {command} with distance {lev.distance(data, command)}", color="lightgreen")
             else:
-                self._print(f"No command found with distance < {self.LEVENSHTEIN_THRESHOLD}.")
+                self._print(f"No command found with distance < {self.LEVENSHTEIN_THRESHOLD}.", color="yellow")
+        # if prev didn't work: check for negative associations and roll a remaining command
+        # if already associated, the llm should have selected it last time and would select it again most likely
+        if command is None:
+            self._print("Checking for negative associations...")
+            result = self.find_closest(data, self.learned_negatives.keys())
+            if result is not None:
+                available_commands = [com for com in self.COMMANDS if com not in self.learned_negatives[result]]
+                if len(available_commands) > 0:
+                    self._print(f"Found a close prompt with negative association: {data} -> {command}. Rolling from the remaining pool: {available_commands}.", color="yellow")
+                    command = random.choice(available_commands)
+                    self._print(f"Rolled command: {command}", color="lightgreen")
+                else:
+                    self._print(f"Found a close prompt with negative association: {data} -> {command}. But all commands have a negative association, rolling randomly...", color="yellow")
+                    command = random.choice(self.COMMANDS)
+                    self._print(f"Rolled command: {command}", color="lightgreen")
         # if prev didn't work: ask llm for command
         if command is None:
             self._print("Asking language model for command...")
@@ -248,7 +258,7 @@ class dog_trainer:
         self.dc.wait_for_idle.clear()
         self.dc.set_action(actions.Action.attention)
         # get feedback from user
-        self._print("Waiting for feedback from user", "yellow")
+        self._print("Waiting for feedback from user", color="yellow")
         if self.auto_feedback:
             # auto feedback with speech recognition
             self.trainer_state_update("Listening for feedback...", "yellow")
@@ -263,7 +273,7 @@ class dog_trainer:
                 self.sr.data_ready.clear()
                 self._print("Feedback recognized: " + self.sr.data)
                 # check for positive feedback
-                if "gut" in self.sr.data.lower() or "gemacht" in self.sr.data.lower():
+                if "gut" in self.sr.data.lower() or "ja" in self.sr.data.lower():
                     self.feedback = True
                     self._print("Positive feedback recognized.", color="yellow")
                     break
@@ -346,4 +356,16 @@ class dog_trainer:
     def llm_print_context(self):
         if self.loaded["LLM"]:
             self.llm.print_context()
-            
+    
+    def is_close_to(self, string_a, string_b):
+        return lev.distance(string_a, string_b) < self.LEVENSHTEIN_THRESHOLD
+
+    def find_closest(self, string, string_list):
+        min_dist = self.LEVENSHTEIN_THRESHOLD + 1
+        closest_string = None
+        for s in string_list:
+            dist = lev.distance(string, s)
+            if dist < min_dist:
+                min_dist = dist
+                closest_string = s
+        return closest_string
