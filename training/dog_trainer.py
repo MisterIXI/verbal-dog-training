@@ -203,13 +203,15 @@ class dog_trainer:
             command = self.llm.trigger_prompt(data)
             self.llm.data_ready.wait()
             self.llm.data_ready.clear()
-            if not self.sr.is_running:
-                print("Cancelled training step.")
-                return
             command = self.llm.data
             if command is None:
                 # when llm errored out
                 self._print("Language model errored out. Cancelling training step...")
+                self.led.start_breathing_color(0.25, self.led.RED, self.led.OFF)
+                sleep(3)
+                self.trainer_state_update("Idle", "lightgreen")
+                self.led.clear_led_all()
+                sleep(2)
                 return
             self._print("Language model returned: " + command)
         # when negative command association is currently, roll randomly
