@@ -6,11 +6,11 @@ import threading as th
 
 class Model(enum.Enum):
     """Enum for different models of the speech recognition library."""
-    W_T = "WH_tiny"
-    W_B = "WH_base"
-    W_S = "WH_small"
-    W_M = "WH_medium"
-    W_L = "WH_large"
+    W_Tiny = "WH_tiny"
+    W_Base = "WH_base"
+    W_Small = "WH_small"
+    W_Medium = "WH_medium"
+    W_Large = "WH_large"
     # Vosk = "Vosk"
 
 
@@ -62,22 +62,22 @@ class recognizer():
 
     def match_model(self, model: Model) -> tuple[callable, str]:
         # match model:
-        if model == Model.W_T:
+        if model == Model.W_Tiny:
             # case Model.W_T:
             m_method = self.r.recognize_whisper
             m_name = "tiny"
             # case Model.W_D:
-        elif model == Model.W_B:
+        elif model == Model.W_Base:
             m_method = self.r.recognize_whisper
             m_name = "base"
             # case Model.W_L:
-        elif model == Model.W_S:
+        elif model == Model.W_Small:
             m_method = self.r.recognize_whisper
             m_name = "small"
-        elif model == Model.W_M:
+        elif model == Model.W_Medium:
             m_method = self.r.recognize_whisper
             m_name = "medium"
-        elif model == Model.W_L:
+        elif model == Model.W_Large:
             m_method = self.r.recognize_whisper
             m_name = "large"
             # case _:
