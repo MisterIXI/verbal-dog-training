@@ -1,6 +1,7 @@
 from argparse import Action
 from time import sleep
 
+import regex as re
 from numpy import add
 from sympy import true
 import custom_speech_recognition.speech_recognition as sr
@@ -13,6 +14,7 @@ import random
 import dog_controller.pyro_connector as dc
 import dog_controller.actions as actions
 import dog_controller.custom_led_lib as led
+
 class t_state(enum.Enum):
     idle = 0
     listening = 1
@@ -157,10 +159,17 @@ class dog_trainer:
             self.led.clear_led_all()
             return
         data = self.sr.data
+        # set all to lower case
+        data = data.lower()
+        # filter out all characters besides alphanumeric, whitespace and umlauts with regex
+        data = re.sub(r'[^\w äöü]', '', data)
         if data is None or data == "":
             self._print("No voice input received. Cancelling training step...")
+            self.led.start_breathing_color(0.25, self.led.RED, self.led.OFF)
+            sleep(3)
             self.trainer_state_update("Idle", "lightgreen")
             self.led.clear_led_all()
+            sleep(2)
             return
         self._print("Voice recognition finished.")
         self._print("Recognized: " + data,color="lightgreen")
