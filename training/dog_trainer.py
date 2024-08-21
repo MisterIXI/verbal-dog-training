@@ -273,7 +273,7 @@ class dog_trainer:
                 self.sr.data_ready.clear()
                 self._print("Feedback recognized: " + self.sr.data)
                 # check for positive feedback
-                if "gut" in self.sr.data.lower() or "ja" in self.sr.data.lower():
+                if "ja" in self.sr.data.lower() or "gut" in self.sr.data.lower():
                     self.feedback = True
                     self._print("Positive feedback recognized.", color="yellow")
                     break
