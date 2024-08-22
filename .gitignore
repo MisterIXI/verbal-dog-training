@@ -3,3 +3,7 @@ __pycache__
 *venv*
 .test
 CMakeFiles
+
+# ignore saved training data
+training_data/*
+!training_data/empty_training_data.json
