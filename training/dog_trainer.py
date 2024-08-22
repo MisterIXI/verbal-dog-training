@@ -199,12 +199,12 @@ class dog_trainer:
             if result is not None:
                 available_commands = [com for com in self.COMMANDS if com not in self.learned_negatives[result]]
                 if len(available_commands) > 0:
-                    self._print(f"Found a close prompt with negative association: {data} -> {command}. Rolling from the remaining pool: {available_commands}.", color="yellow")
                     command = random.choice(available_commands)
+                    self._print(f"Found a close prompt with negative association: {data} -> {command}. Rolling from the remaining pool: {available_commands}.", color="yellow")
                     self._print(f"Rolled command: {command}", color="lightgreen")
                 else:
-                    self._print(f"Found a close prompt with negative association: {data} -> {command}. But all commands have a negative association, rolling randomly...", color="yellow")
                     command = random.choice(self.COMMANDS)
+                    self._print(f"Found a close prompt with negative association: {data} -> {command}. But all commands have a negative association, rolling randomly...", color="yellow")
                     self._print(f"Rolled command: {command}", color="lightgreen")
         # if prev didn't work: ask llm for command
         if command is None:
