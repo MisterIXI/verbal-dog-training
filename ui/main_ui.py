@@ -9,6 +9,9 @@ from dog_controller.actions import Action
 import time
 import datetime
 import threading as th
+import json
+import os
+from collections import defaultdict
 
 # import TKinter as tk
 class MainUI(ctk.CTk):
@@ -38,7 +41,7 @@ class MainUI(ctk.CTk):
         main_label.pack(side=ctk.TOP, pady=self.PAD_LARGE)        
         content_frame = ctk.CTkFrame(self)
         content_frame.pack(side=ctk.BOTTOM, fill=ctk.BOTH, expand=True, padx=self.PAD_LARGE, pady=self.PAD_LARGE)
-        content_frame.grid_columnconfigure(0, weight=2)
+        content_frame.grid_columnconfigure(0, weight=5)
         content_frame.grid_columnconfigure(1, weight=1)
         content_frame.grid_rowconfigure(0, weight=1)
         self.sb_output = ctk.CTkScrollableFrame(content_frame)
@@ -114,7 +117,27 @@ class MainUI(ctk.CTk):
         curr_row += 1
         self.btn_db_prompt.grid(row=curr_row, column=0, pady=self.PAD_SMALL,padx=self.PAD_SMALL, sticky="e")
         self.btn_db_context = ctk.CTkButton(input_frame, text="Context", font=("Arial", self.FONT_SIZE), state=ctk.DISABLED)
-        self.btn_db_context.grid(row=curr_row, column=1, pady=self.PAD_SMALL,padx=self.PAD_SMALL, sticky="w")
+        self.btn_db_context.grid(row=curr_row, column=1, pady=self.PAD_SMALL,padx=self.PAD_SMALL, sticky="w")#
+        curr_row += 1
+        # save/load butons
+        self.save_load_label = ctk.CTkLabel(input_frame, text="Save/Load:", font=("Arial", self.FONT_SIZE))
+        self.save_load_label.grid(row=curr_row, column=0, columnspan=2, pady=self.PAD_SMALL)
+        curr_row += 1
+        self.btn_load_data_filenames = ctk.CTkButton(input_frame, text="Load Data", font=("Arial", self.FONT_SIZE))
+        self.btn_load_data_filenames.grid(row=curr_row, column=0, pady=self.PAD_SMALL,padx=self.PAD_SMALL, columnspan=2)
+        self.btn_load_data_filenames.configure(command=self.load_data_filenames, state=ctk.DISABLED)
+        curr_row += 1
+        self.dd_load_data_selector = ctk.CTkOptionMenu(input_frame, values=["No data loaded"], font=("Arial", self.FONT_SIZE-1))
+        self.dd_load_data_selector.grid(row=curr_row, column=0 , columnspan=2)
+        self.dd_load_data_selector.configure(state=ctk.DISABLED)
+        curr_row += 1
+        self.btn_save = ctk.CTkButton(input_frame, text="Save", font=("Arial", self.FONT_SIZE), command=self.save)
+        self.btn_save.grid(row=curr_row, column=0, sticky="e", padx=self.PAD_SMALL, pady=self.PAD_SMALL)
+        self.btn_save.configure(state=ctk.DISABLED)
+        self.btn_load = ctk.CTkButton(input_frame, text="Load", font=("Arial", self.FONT_SIZE), command=self.load)
+        self.btn_load.grid(row=curr_row, column=1, sticky="w", padx=self.PAD_SMALL, pady=self.PAD_SMALL)
+        self.btn_load.configure(state=ctk.DISABLED)
+        curr_row += 1
         # dog state
         dogstate_frame = ctk.CTkFrame(right_frame)
         dogstate_frame.grid(row=1, column=0, sticky="nsew", padx=self.PAD_LARGE, pady=self.PAD_LARGE)
@@ -168,6 +191,8 @@ class MainUI(ctk.CTk):
         self.btn_db_prompt.configure(command=self.dog_trainer.llm_print_preprompt, state=ctk.NORMAL)
         self.btn_db_context.configure(command=self.dog_trainer.llm_print_context, state=ctk.NORMAL)
         self.btn_action_override.configure(command=self.override_action, state=ctk.NORMAL)
+        self.btn_load_data_filenames.configure(state=ctk.NORMAL)
+        self.btn_save.configure(state=ctk.NORMAL)
 
     def on_start_button(self):
         th.Thread(target=self.training_loop).start()
@@ -233,8 +258,64 @@ class MainUI(ctk.CTk):
             self.state_text.configure(text=state, text_color="lightgreen")
         else:
             self.state_text.configure(text=state, text_color="yellow")
-        
-            
+    
+    def save(self):
+        if self.dog_trainer is None or not self.dog_trainer.is_all_loaded():
+            self.print_output("Trainer not loaded. Load trainer first.", color="red")
+            return
+        # create folder if it doesn't exist
+        if not os.path.exists("training_data"):
+            os.makedirs("training_data")
+        # save the positives and negatives from dog_trainer, as well as the llm context
+        data_to_save = {
+            "positives": self.dog_trainer.learned_commands,
+            "negatives": self.dog_trainer.learned_negatives,
+            "llm_context": self.dog_trainer.llm.context,
+        }
+        # write to file (filename: YYYYMMDD_HHMMSS_training_data.json)
+        filename = f"{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}_training_data.json"
+        # append counter if file already exists
+        counter = 1
+        while os.path.exists("training_data/" + filename):
+            filename = f"{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}_training_data_({counter}).json"
+            counter += 1
+        with open("training_data/" + filename, "w") as f:
+            json.dump(data_to_save, f, indent=4)
+        self.print_output(f"Training data saved to {filename}", color="lightgreen")
+    
+    def load(self):
+        if not os.path.exists("training_data"):
+            self.print_output("No training data found.", color="red")
+            return
+        if self.dog_trainer is None or not self.dog_trainer.is_all_loaded():
+            self.print_output("Trainer not loaded. Load trainer first.", color="red")
+            return
+        filename = "training_data/" + self.dd_load_data_selector.get()
+        with open(filename, "r") as f:
+            data = json.load(f)
+        self.dog_trainer.learned_commands = data["positives"]
+        # make sure the learned_negatives is the defaultdict[str, list] type
+        self.dog_trainer.learned_negatives = defaultdict(list)
+        self.dog_trainer.learned_negatives.update(data["negatives"])
+        self.dog_trainer.llm.context = data["llm_context"]
+        self.print_output("Training data loaded.", color="lightgreen")
+    
+    def load_data_filenames(self, _click=None):
+        if not os.path.exists("training_data"):
+            self.print_output("No training data folder found.", color="red")
+            self.dd_load_data_selector.configure(values=["No data found"])
+            return
+        files = [f for f in os.listdir("training_data/") if f.endswith(".json")]
+        if len(files) == 0:
+            self.print_output("No training data found in training_data folder.", color="red")
+            self.dd_load_data_selector.configure(values=["No data found"])
+            return
+        self.dd_load_data_selector.configure(values=files)
+        self.dd_load_data_selector.set(files[0])
+        self.dd_load_data_selector.configure(state=ctk.NORMAL)
+        self.btn_load.configure(state=ctk.NORMAL)
+        self.print_output("Training data filenames loaded.", color="lightgreen")
+    
 # if __name__ in {"__main__", "__mp_main__"}:
 #     my_ui = MainUI()
 #     # my_ui.mainloop()
