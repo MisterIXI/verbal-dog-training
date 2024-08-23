@@ -103,24 +103,3 @@ class remote_controller():
             return
         self.controller.stop_loop()
         self._print("Loop stopped", "DC")
-
-    def start_watcher_if_not_running(self):
-        if not self.watcher_running:
-            self.watcher_thread = th.Thread(target=self.state_watcher)
-            self.watcher_thread.start()
-
-    def state_watcher(self):
-        if self.watcher_running:
-            self._print("State watcher already running", "DC", "yellow")
-            return
-        self.watcher_running = True
-        while True:
-            new_state = self.poll_state()
-            if self.state != new_state:
-                self._print(
-                    f"State changed from {self.state} to {new_state}", "DC")
-                self.state = new_state
-                self.state_callback(new_state.name)
-                if new_state == actions.Action.idle:
-                    self.wait_for_idle.set()
-            sleep(0.3)
