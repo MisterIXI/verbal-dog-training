@@ -10,12 +10,12 @@ class Action(enum.Enum):
     idle = 0
     attention = 1
     attention_cancel = 2
-    lie_down = 3
-    shake = 4
-    happy = 5
-    turn_360 = 6
-    dance_1 = 7
-    dance_2 = 8
+    hinlegen = 3
+    schütteln = 4
+    spielen = 5
+    drehen = 6
+    springen = 7
+    buddeln = 8
     # jump_lr = 5
 
 
@@ -64,7 +64,7 @@ def create_action_dict() -> tp.Dict[Action, tp.List[tp.Tuple]]:
             (0, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0, -0.65, 0]),
             (2, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0, 0.0, 0]),
         ]),
-        Action.lie_down: ([
+        Action.hinlegen: ([
             (0, MODE_STAND, DOG_DEFAULT_HEIGHT, [0, 0, 0]),
             (1, MODE_FORCE_UP),
             (2, MODE_FORCE_DOWN),
@@ -72,7 +72,7 @@ def create_action_dict() -> tp.Dict[Action, tp.List[tp.Tuple]]:
             (5, MODE_FORCE_UP),
             (5.5, MODE_STAND, DOG_DEFAULT_HEIGHT, [0, 0, 0]),
         ]),
-        Action.shake: ([
+        Action.schütteln: ([
             (0, MODE_FORCE_UP, DOG_DEFAULT_HEIGHT,     [0, 0, 0]),
             (0.25, MODE_STAND, DOG_DEFAULT_HEIGHT,   [0, 0, 0]),
             (0.75, MODE_STAND, DOG_DEFAULT_HEIGHT,   [1.5, 0, 0]),
@@ -83,7 +83,7 @@ def create_action_dict() -> tp.Dict[Action, tp.List[tp.Tuple]]:
             (3, MODE_STAND, DOG_DEFAULT_HEIGHT,   [0, 0, 0]),
             (3.5, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0, 0, 0]),
         ]),
-        Action.happy: ([
+        Action.spielen: ([
             (0, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0, 0, 0]),
             (0.75, MODE_STAND, DOG_DEFAULT_HEIGHT,  [0, 1, 0]),
             (1.25, MODE_STAND, DOG_DEFAULT_HEIGHT,  [0, 1, 0]),
@@ -101,12 +101,12 @@ def create_action_dict() -> tp.Dict[Action, tp.List[tp.Tuple]]:
             (6.4, MODE_WALK, DOG_DEFAULT_HEIGHT, 0, [-0.1, 0], FOOT_RAISE_HEIGHT),
             (7, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0, 0, 0]),
         ]),
-        Action.turn_360: ([
+        Action.drehen: ([
             (0, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0, 0, 0]),
             (6.8, MODE_WALK, DOG_DEFAULT_HEIGHT, FULL_ROT_RAD/5.0, [0, 0], FOOT_RAISE_HEIGHT),
             (6.8, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0, 0, 0]),
         ]),
-        Action.dance_1: ([
+        Action.springen: ([
             (0, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0, 0, 0]),
             (3.5, MODE_DANCE1),
             (4, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0, 0, 0]),
@@ -114,7 +114,7 @@ def create_action_dict() -> tp.Dict[Action, tp.List[tp.Tuple]]:
             (4.7, MODE_WALK, DOG_DEFAULT_HEIGHT, 0, [-0.1, 0], FOOT_RAISE_HEIGHT),
             (5, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0, 0, 0]),
         ]),
-        Action.dance_2: ([
+        Action.buddeln: ([
             (0, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0, 0, 0]),
             (4, MODE_DANCE2),
             (4.5, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0, 0, 0]),
