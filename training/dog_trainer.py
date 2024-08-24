@@ -284,7 +284,7 @@ class dog_trainer:
                     break
         else:
             # feedback with buttons
-            self.led.breath_single_color(self.led.YELLOW)
+            self.led.breathe_single_color(self.led.YELLOW)
             self.trainer_state_update("Waiting for feedback BTN...", "yellow")
             self._print("Waiting for feedback...")
             if feedback_unlock_cb is not None:
