@@ -5,11 +5,14 @@ import threading as th
 
 
 class LLM_API:
+    TOKEN_COUNT = 15
+    # TOKEN_COUNT = 50
     def __init__(self, print_callback: callable, commands: list[str] = ["platz", "tanzen", "maennchen"], obfuscate_names: bool = True) -> None:
         self.print_callback = print_callback
         self.url = "http://localhost:8080/completion"
         self.obfuscate_names = obfuscate_names
         self.grammar = self.build_grammar(commands, self.obfuscate_names)
+        self._print("Grammar: " + self.grammar)
         # self.print_cb("Grammar: " + self.grammar)
         self.context = {}
         self.commands = commands
@@ -98,7 +101,7 @@ class LLM_API:
                 if self.obfuscate_names:
                     chosen_command += " (de-obfuscated: " + \
                         self.commands[int(chosen_command[-1]) - 1] + ")"
-                self._print(f"Response: {chosen_command}")
+                self._print(f"Response: {response_json['content']} --> {chosen_command}")
                 self.data = response_json["content"]
                 self.data_ready.set()
             else:
@@ -110,7 +113,7 @@ class LLM_API:
     def _reset_and_fill_context(self):
         self.context = {}
 
-    def _get_preprompt(self, id: int = 2) -> str:
+    def _get_preprompt(self, id: int = 3) -> str:
         command_prompt = "The possible commands are: ["
         for i, command in enumerate(self.commands):
             if self.obfuscate_names:
@@ -133,6 +136,15 @@ class LLM_API:
                 - {platz: platz: True} - The user said 'platz', Llama chose 'platz', and this was the correct action.\n\
                 - {beweg dich: maennchen: False} - The user said 'beweg dich', Llama chose 'maennchen', but this was not the correct action.\n\
                 - {runter: platz: True} - The user said 'runter', Llama chose 'platz', and this was the correct action.\n" + command_prompt
+            case 3:
+                return "This is a conversation between User and Llama, a precise chatbot designed to execute commands accurately based on context.\n\
+                Llama analyzes past commands and current prompts to determine the most appropriate action to take. Each command provided in the context will be associated with its correctness.\n\
+                The context provided will have the following format: {prompt: command: correct}\n\
+                Prompt: The text presented to Llama.\n\
+                Command: The action chosen by Llama.\n\
+                Correct: A boolean indicating whether the chosen action was correct or not.\n\
+                Llama wil always choose one action, and will only respond with the name of the chosen action. Llama will only ever say one short sentence in response to be as concise as possible. \n\
+            " + command_prompt + "\n"
             case _:
                 raise ValueError("Invalid id")
     def _build_context(self, context: dict) -> str:
@@ -151,7 +163,7 @@ class LLM_API:
                   context_str + prompt_str + response_str)
         return {
             "stream": False,
-            "n_predict": 15,
+            "n_predict": self.TOKEN_COUNT,
             "temperature": 0.7,
             "stop": ["</s>",
                      "Llama:",
