@@ -6,14 +6,14 @@ from numpy import add
 from sympy import true
 import custom_speech_recognition.speech_recognition as sr
 import custom_llm.llm_api as llm_api
+import dog_controller.pyro_connector as dc
+import dog_controller.actions as actions
+import dog_controller.custom_led_lib as led
 import enum
 import threading as th
 import Levenshtein as lev
 from collections import defaultdict
 import random
-import dog_controller.pyro_connector as dc
-import dog_controller.actions as actions
-import dog_controller.custom_led_lib as led
 
 class t_state(enum.Enum):
     idle = 0
