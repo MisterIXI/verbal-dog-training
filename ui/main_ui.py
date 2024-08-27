@@ -268,6 +268,8 @@ class MainUI(ctk.CTk):
             os.makedirs("training_data")
         # save the positives and negatives from dog_trainer, as well as the llm context
         data_to_save = {
+            "pos_count": self.dog_trainer.total_positives,
+            "neg_count": self.dog_trainer.total_negatives,
             "positives": self.dog_trainer.learned_commands,
             "negatives": self.dog_trainer.learned_negatives,
             "llm_context": self.dog_trainer.llm.context,
@@ -293,6 +295,8 @@ class MainUI(ctk.CTk):
         filename = "training_data/" + self.dd_load_data_selector.get()
         with open(filename, "r") as f:
             data = json.load(f)
+        self.dog_trainer.total_positives = data["pos_count"]
+        self.dog_trainer.total_negatives = data["neg_count"]
         self.dog_trainer.learned_commands = data["positives"]
         # make sure the learned_negatives is the defaultdict[str, list] type
         self.dog_trainer.learned_negatives = defaultdict(list)
