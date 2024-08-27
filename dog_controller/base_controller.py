@@ -4,7 +4,7 @@ import threading as th
 import time
 import math
 import Pyro5.api as api
-from actions import DOG_DEFAULT_HEIGHT, FOOT_RAISE_HEIGHT, MODE_HOLD, MODE_IDLE, MODE_STAND, MODE_WALK, Action, create_action_dict
+from actions import DOG_DEFAULT_HEIGHT, FOOT_RAISE_HEIGHT, MODE_HOLD, MODE_IDLE, MODE_STAND, MODE_WALK, MODE_CONT_WALK, Action, create_action_dict
 import robot_interface as go1
 
 @api.expose
@@ -129,6 +129,9 @@ class BaseController:
                     # self.yawspeed = angle_diff / (curr_step[0] - last_step[0])
                     self.yawspeed = curr_step[3]
                     self.velocity = curr_step[4]
+            elif self.mode == MODE_CONT_WALK:
+                self.gaitType = 1
+                self.foot_raise_height = curr_step[5]
             self.cmd.gaitType = self.gaitType
             # set cmd values and send
             self.cmd.mode = self.mode

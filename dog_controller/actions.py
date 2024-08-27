@@ -26,6 +26,7 @@ MODE_HOLD = -1
 MODE_IDLE = 0
 MODE_STAND = 1
 MODE_WALK = 2
+MODE_CONT_WALK = 3
 MODE_FORCE_DOWN = 5
 MODE_FORCE_UP = 6
 MODE_DANCE1 = 12
@@ -46,11 +47,13 @@ def create_action_dict() -> tp.Dict[Action, tp.List[tp.Tuple]]:
         # move_arr: mode 5 FORCE_DOWN:  [time, mode]
         # move_arr: mode 6 FORCE_UP:    [time, mode]
         Action.return_to_idle: ([
-            # (0, MODE_WALK, DOG_DEFAULT_HEIGHT, 0, [0, 0], FOOT_RAISE_HEIGHT),
-            # (3, MODE_WALK, DOG_DEFAULT_HEIGHT, 0, [0, 0], FOOT_RAISE_HEIGHT),
-            # (3, MODE_STAND, DOG_DEFAULT_HEIGHT, [0, 0, 0]),
-            # (4, MODE_STAND, DOG_DEFAULT_HEIGHT, [0, 0, 0]),
-            (0, MODE_IDLE, DOG_DEFAULT_HEIGHT, [0, 0, 0]),
+            # (0, MODE_WALK, DOG_DEFAULT_HEIGHT, 0, [0.001, 0], FOOT_RAISE_HEIGHT),
+            # (3, MODE_WALK, DOG_DEFAULT_HEIGHT, 0, [0.1, 0], FOOT_RAISE_HEIGHT),
+            (0, MODE_CONT_WALK, DOG_DEFAULT_HEIGHT, 0, [0, 0], FOOT_RAISE_HEIGHT),
+            (1.5, MODE_CONT_WALK, DOG_DEFAULT_HEIGHT, 0, [0, 0], FOOT_RAISE_HEIGHT),
+            (3, MODE_STAND, DOG_DEFAULT_HEIGHT, [0, 0, 0]),
+            (6, MODE_STAND, DOG_DEFAULT_HEIGHT, [0, 0, 0]),
+            # (0, MODE_IDLE, DOG_DEFAULT_HEIGHT, [0, 0, 0]),
         ]),
         Action.idle: ([
             (0, MODE_IDLE, DOG_DEFAULT_HEIGHT, [0, 0, 0]),
@@ -87,39 +90,41 @@ def create_action_dict() -> tp.Dict[Action, tp.List[tp.Tuple]]:
             (0, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0, 0, 0]),
             (0.75, MODE_STAND, DOG_DEFAULT_HEIGHT,  [0, 1, 0]),
             (1.25, MODE_STAND, DOG_DEFAULT_HEIGHT,  [0, 1, 0]),
-            (1.5, MODE_STAND, DOG_DEFAULT_HEIGHT,   [0, 1, 0.7]),
-            (2, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0, 1, -0.7]),
-            (2.5, MODE_STAND, DOG_DEFAULT_HEIGHT,   [0, 1, 0.7]),
-            (3, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0, 1, -0.7]),
-            (3.5, MODE_STAND, DOG_DEFAULT_HEIGHT,   [0, 1, 0.7]),
-            (4, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0, 1, -0.7]),
-            (4.5, MODE_STAND, DOG_DEFAULT_HEIGHT,   [0, 1, 0.7]),
-            (5, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0, 1, -0.7]),
+            (1.5, MODE_STAND, DOG_DEFAULT_HEIGHT,   [0, 1, 0.65]),
+            (2, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0, 1, -0.65]),
+            (2.5, MODE_STAND, DOG_DEFAULT_HEIGHT,   [0, 1, 0.65]),
+            (3, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0, 1, -0.65]),
+            (3.5, MODE_STAND, DOG_DEFAULT_HEIGHT,   [0, 1, 0.65]),
+            (4, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0, 1, -0.65]),
+            (4.5, MODE_STAND, DOG_DEFAULT_HEIGHT,   [0, 1, 0.65]),
+            (5, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0, 1, -0.65]),
             (5.25, MODE_STAND, DOG_DEFAULT_HEIGHT,  [0, 1, 0]),
             (6, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0, 0, 0]),
-            (6.2, MODE_WALK, DOG_DEFAULT_HEIGHT, 0, [0.1, 0], FOOT_RAISE_HEIGHT),
-            (6.4, MODE_WALK, DOG_DEFAULT_HEIGHT, 0, [-0.1, 0], FOOT_RAISE_HEIGHT),
             (7, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0, 0, 0]),
+            # (8.2, MODE_WALK, DOG_DEFAULT_HEIGHT, 0, [0.1, 0], FOOT_RAISE_HEIGHT),
+            # (8.4, MODE_WALK, DOG_DEFAULT_HEIGHT, 0, [-0.1, 0], FOOT_RAISE_HEIGHT),
+            (8.5, MODE_CONT_WALK, DOG_DEFAULT_HEIGHT, 0, [0,0], FOOT_RAISE_HEIGHT),
+            (10, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0, 0, 0]),
         ]),
         Action.drehen: ([
             (0, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0, 0, 0]),
             (6.8, MODE_WALK, DOG_DEFAULT_HEIGHT, FULL_ROT_RAD/5.0, [0, 0], FOOT_RAISE_HEIGHT),
-            (6.8, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0, 0, 0]),
+            (8.5, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0, 0, 0]),
+            (10, MODE_CONT_WALK, DOG_DEFAULT_HEIGHT, 0, [0,0], FOOT_RAISE_HEIGHT),
+            (11.5, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0, 0, 0]),
         ]),
         Action.springen: ([
             (0, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0, 0, 0]),
             (3.5, MODE_DANCE1),
             (4, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0, 0, 0]),
-            (4.5, MODE_WALK, DOG_DEFAULT_HEIGHT, 0, [0.1, 0], FOOT_RAISE_HEIGHT),
-            (4.7, MODE_WALK, DOG_DEFAULT_HEIGHT, 0, [-0.1, 0], FOOT_RAISE_HEIGHT),
-            (5, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0, 0, 0]),
+            (5.5, MODE_CONT_WALK, DOG_DEFAULT_HEIGHT, 0, [0,0], FOOT_RAISE_HEIGHT),
+            (7, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0, 0, 0]),
         ]),
         Action.buddeln: ([
             (0, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0, 0, 0]),
             (4, MODE_DANCE2),
             (4.5, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0, 0, 0]),
-            (5, MODE_WALK, DOG_DEFAULT_HEIGHT, 0, [0.1, 0], FOOT_RAISE_HEIGHT),
-            (5.2, MODE_WALK, DOG_DEFAULT_HEIGHT, 0, [-0.1, 0], FOOT_RAISE_HEIGHT),
-            (5, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0, 0, 0]),
+            (6, MODE_CONT_WALK, DOG_DEFAULT_HEIGHT, 0, [0,0], FOOT_RAISE_HEIGHT),
+            (7.5, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0, 0, 0]),
         ]),
     }
