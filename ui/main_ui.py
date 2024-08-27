@@ -20,13 +20,14 @@ class MainUI(ctk.CTk):
     FONT_SIZE = 20
     PAD_SMALL = 5
     PAD_LARGE = 10
-
+    KEEP_MAX_MESSAGES = 500
     def __init__(self):
         super().__init__()
         self.dog_trainer: dog_trainer = None
         self.setup_main_ui()
         shared_dict = {}
         self.printed_output = []
+        self.current_labels = []
         self._epoch = time.time()
         self.output = ""
 
@@ -239,7 +240,6 @@ class MainUI(ctk.CTk):
         if not self.winfo_exists():
             print("Tried to print to a non-existing window.")
             return
-        # Format time as minutes:seconds.ms
         ct = time.time() - self._epoch
         time_stamp = f"{str(int(ct/60)).zfill(3)}:{str(int(ct%60)).zfill(2)}.{str(int(ct*1000)%1000).zfill(3)}"
         output = f"[{time_stamp}|{source}:] {text}"
@@ -251,6 +251,10 @@ class MainUI(ctk.CTk):
         self.printed_output.append(label)
         self.output += output + "\n"
         print(output)
+        if len(self.current_labels) > self.KEEP_MAX_MESSAGES:
+            old_label = self.current_labels.pop(0)
+            old_label.forget()
+            old_label.destroy()
         self.after(50,self.sb_output._parent_canvas.yview_moveto, 1.0)
         
     def update_dog_state_text(self, state: text):
