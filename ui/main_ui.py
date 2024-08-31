@@ -249,6 +249,7 @@ class MainUI(ctk.CTk):
         label.configure(wraplength=self.sb_output.winfo_width())
         label.pack(side=ctk.TOP, anchor="w")
         self.printed_output.append(label)
+        self.current_labels.append(label)
         self.output += output + "\n"
         print(output)
         if len(self.current_labels) > self.KEEP_MAX_MESSAGES:
