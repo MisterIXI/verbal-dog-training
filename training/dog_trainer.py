@@ -162,13 +162,13 @@ class dog_trainer:
             self.trainer_state_update("Idle", "lightgreen")
             self.led.clear_led_all()
             return
-        data = self.sr.data
+        command = self.sr.data
         #### Command preprocessing
         # set all to lower case
-        data = data.lower()
+        command = command.lower()
         # filter out all characters besides alphanumeric, whitespace and umlauts with regex
-        data = re.sub(r'[^\w äöüß]', '', data)
-        if data is None or data == "":
+        command = re.sub(r'[^\w äöüß]', '', command)
+        if command is None or command == "":
             self._print("No voice input received. Cancelling training step...")
             self.led.start_breathing_color(0.25, self.led.RED, self.led.OFF)
             sleep(3)
@@ -177,52 +177,52 @@ class dog_trainer:
             sleep(2)
             return
         self._print("Voice recognition finished.")
-        self._print("Recognized: " + data,color="lightgreen")
+        self._print("Recognized: " + command,color="lightgreen")
         self.trainer_state_update("Checking command...", "yellow")
         #### Check if exact match in learned commands
         # check if command is in confirmed dict
         self._print("Checking if command is in confirmed dict...")
-        command = None
-        if data in self.learned_commands:
-            command = self.learned_commands[data]
-            self._print("Found command in confirmed dict: " + command)
+        action_str = None
+        if command in self.learned_commands:
+            action_str = self.learned_commands[command]
+            self._print("Found command in confirmed dict: " + action_str)
         #### Check if any commands in learned commands is < LEVENSHTEIN_THRESHOLD --> find closest of them
         # if prev didn't work: levenshtein distance to find closest confirmed command
-        if command is None:
+        if action_str is None:
             self._print("Command not found in confirmed dict.")
             self._print("Calculating Levenshtein distance...")
-            result = self.find_closest(data, self.learned_commands.keys())
+            result = self.find_closest(command, self.learned_commands.keys())
             if result is not None:
-                command = self.learned_commands[result]
-                self._print(f"Found closest command: {command} with distance {lev.distance(data, command)}", color="lightgreen")
+                action_str = self.learned_commands[result]
+                self._print(f"Found closest command: {action_str} with distance {lev.distance(command, action_str)}", color="lightgreen")
             else:
                 self._print(f"No command found with distance < {self.LEVENSHTEIN_THRESHOLD}.", color="yellow")
         #### Check if any commands in learned negatives is < LEVENSHTEIN_THRESHOLD --> roll from remaining commands of the one found
         # if prev didn't work: check for negative associations and roll a remaining command
         # if already associated, the llm should have selected it last time and would select it again most likely
-        if command is None:
+        if action_str is None:
             self._print("Checking for negative associations...")
-            result = self.find_closest(data, self.learned_negatives.keys())
+            result = self.find_closest(command, self.learned_negatives.keys())
             if result is not None:
                 available_commands = [com for com in self.COMMANDS if com not in self.learned_negatives[result]]
                 if len(available_commands) > 0:
-                    command = random.choice(available_commands)
-                    self._print(f"Found a close prompt with negative association: {data} -> {command}. Rolling from the remaining pool: {available_commands}.", color="yellow")
-                    self._print(f"Rolled command: {command}", color="lightgreen")
+                    action_str = random.choice(available_commands)
+                    self._print(f"Found a close prompt with negative association: {command} -> {action_str}. Rolling from the remaining pool: {available_commands}.", color="yellow")
+                    self._print(f"Rolled command: {action_str}", color="lightgreen")
                 else:
-                    command = random.choice(self.COMMANDS)
-                    self._print(f"Found a close prompt with negative association: {data} -> {command}. But all commands have a negative association, rolling randomly...", color="yellow")
-                    self._print(f"Rolled command: {command}", color="lightgreen")
+                    action_str = random.choice(self.COMMANDS)
+                    self._print(f"Found a close prompt with negative association: {command} -> {action_str}. But all commands have a negative association, rolling randomly...", color="yellow")
+                    self._print(f"Rolled command: {action_str}", color="lightgreen")
         #### Query LLM for command
         # if prev didn't work: ask llm for command
-        if command is None:
+        if action_str is None:
             self._print("Asking language model for command...")
             self.trainer_state_update("Querying LLM...", "yellow")
-            self.llm.trigger_prompt(data)
+            self.llm.trigger_prompt(command)
             self.llm.data_ready.wait()
             self.llm.data_ready.clear()
-            command = self.llm.data
-            if command is None:
+            action_str = self.llm.data
+            if action_str is None:
                 # when llm errored out
                 self._print("Language model errored out. Cancelling training step...")
                 self.led.start_breathing_color(0.25, self.led.RED, self.led.OFF)
@@ -231,31 +231,31 @@ class dog_trainer:
                 self.led.clear_led_all()
                 sleep(2)
                 return
-            self._print("Language model returned: " + command)
+            self._print("Language model returned: " + action_str)
         #### Check if exact match in negative commands --> reroll from remaining commands if the case
         # when the current command has a negative association with the prompt
-        if command in self.learned_negatives[data]:
-            old_command = command
+        if action_str in self.learned_negatives[command]:
+            old_command = action_str
             self._print("Command is in negative list. Rerolling...", color="red")
-            available_commands = [com for com in self.COMMANDS if com not in self.learned_negatives[data]]
+            available_commands = [com for com in self.COMMANDS if com not in self.learned_negatives[command]]
             # if no commands are available, roll randomly
             if len(available_commands) == 0:
                 self._print("No non-negative commands available. Rolling completely at random...", color="red")
-                command = random.choice(self.COMMANDS)
+                action_str = random.choice(self.COMMANDS)
             else:
                 self._print(f"Selecting from the remaining commands: {available_commands}")
-                command = random.choice(available_commands)
-            self._print(f"Command reroll: {old_command} -> {command}", color="lightgreen")
+                action_str = random.choice(available_commands)
+            self._print(f"Command reroll: {old_command} -> {action_str}", color="lightgreen")
         #### If error in command selection, cancel training step
-        if command not in self.COMMANDS or command is None:
+        if action_str not in self.COMMANDS or action_str is None:
             self._print("Command not recognized. Cancelling training step...", color="red")
             self.led.clear_led_all()
             self.trainer_state_update("Idle", "lightgreen")
             return
-        action = actions.Action[command]
+        action = actions.Action[action_str]
         self.led.breathe_single_color(self.led.GREEN)
         # execute command
-        self._print(f"Executing command: {command}...", color="yellow")
+        self._print(f"Executing command: {action_str}...", color="yellow")
         self.trainer_state_update("Executing command...", "yellow")
         if not self.dc.is_connected:
             self._print("Not connected to remote controller", "DC", "red")
@@ -304,18 +304,18 @@ class dog_trainer:
         self._print("Feedback received.")
         self.led.clear_led_all()
         self.dc.set_action(actions.Action.attention_cancel)
-        self._print(f"Feedback: {data} => {command} was {self.feedback}")
-        self.llm.add_context(data, command, self.feedback)
+        self._print(f"Feedback: {command} => {action_str} was {self.feedback}")
+        self.llm.add_context(command, action_str, self.feedback)
         if self.feedback:
-            if command in self.learned_negatives[data]:
-                self.learned_negatives[data].remove(command)
-            self.learned_commands[data] = command
+            if action_str in self.learned_negatives[command]:
+                self.learned_negatives[command].remove(action_str)
+            self.learned_commands[command] = action_str
             self.total_positives += 1
         else:
-            self.learned_negatives[data].append(command)
+            self.learned_negatives[command].append(action_str)
             # when negative and command was previously learned: remove from learned commands
-            if data in self.learned_commands:
-                del self.learned_commands[data]
+            if command in self.learned_commands:
+                del self.learned_commands[command]
             self.total_negatives += 1
         # reset feedback event
         self.wait_for_feedback.clear()
