@@ -46,11 +46,12 @@ class remote_controller():
                     self.wait_for_idle.clear()
             new_state = actions.Action(self.controller.get_current_action())
             if self.state != new_state:
+                old_state = self.state
                 self._print(
                     f"State changed from {self.state} to {new_state}")
                 self.state = new_state
                 self.state_callback(new_state.name)
-                if new_state == actions.Action.idle:
+                if new_state == actions.Action.idle and not (old_state == actions.Action.attention_cancel or old_state == actions.Action.attention):
                     self.wait_for_idle.set()
             self.test_connection()
             sleep(0.1)
