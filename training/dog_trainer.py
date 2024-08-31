@@ -240,7 +240,7 @@ class dog_trainer:
                 self._print(f"Selecting from the remaining commands: {available_commands}")
                 command = random.choice(available_commands)
             self._print(f"Command reroll: {old_command} -> {command}", color="lightgreen")
-        if command not in self.COMMANDS:
+        if command not in self.COMMANDS or command is None:
             self._print("Command not recognized. Cancelling training step...", color="red")
             self.led.clear_led_all()
             self.trainer_state_update("Idle", "lightgreen")
