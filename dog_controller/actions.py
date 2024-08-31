@@ -15,7 +15,7 @@ class Action(enum.Enum):
     spielen = 5
     drehen = 6
     springen = 7
-    buddeln = 8
+    tanzen = 8
     # jump_lr = 5
 
 
@@ -120,7 +120,7 @@ def create_action_dict() -> tp.Dict[Action, tp.List[tp.Tuple]]:
             (5.5, MODE_CONT_WALK, DOG_DEFAULT_HEIGHT, 0, [0,0], FOOT_RAISE_HEIGHT),
             (7, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0, 0, 0]),
         ]),
-        Action.buddeln: ([
+        Action.tanzen: ([
             (0, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0, 0, 0]),
             (4, MODE_DANCE2),
             (4.5, MODE_STAND, DOG_DEFAULT_HEIGHT,     [0, 0, 0]),
