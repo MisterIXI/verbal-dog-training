@@ -218,7 +218,7 @@ class dog_trainer:
         if command is None:
             self._print("Asking language model for command...")
             self.trainer_state_update("Querying LLM...", "yellow")
-            command = self.llm.trigger_prompt(data)
+            self.llm.trigger_prompt(data)
             self.llm.data_ready.wait()
             self.llm.data_ready.clear()
             command = self.llm.data
