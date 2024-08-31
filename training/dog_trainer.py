@@ -163,6 +163,7 @@ class dog_trainer:
             self.led.clear_led_all()
             return
         data = self.sr.data
+        #### Command preprocessing
         # set all to lower case
         data = data.lower()
         # filter out all characters besides alphanumeric, whitespace and umlauts with regex
@@ -178,12 +179,14 @@ class dog_trainer:
         self._print("Voice recognition finished.")
         self._print("Recognized: " + data,color="lightgreen")
         self.trainer_state_update("Checking command...", "yellow")
+        #### Check if exact match in learned commands
         # check if command is in confirmed dict
         self._print("Checking if command is in confirmed dict...")
         command = None
         if data in self.learned_commands:
             command = self.learned_commands[data]
             self._print("Found command in confirmed dict: " + command)
+        #### Check if any commands in learned commands is < LEVENSHTEIN_THRESHOLD --> find closest of them
         # if prev didn't work: levenshtein distance to find closest confirmed command
         if command is None:
             self._print("Command not found in confirmed dict.")
@@ -194,6 +197,7 @@ class dog_trainer:
                 self._print(f"Found closest command: {command} with distance {lev.distance(data, command)}", color="lightgreen")
             else:
                 self._print(f"No command found with distance < {self.LEVENSHTEIN_THRESHOLD}.", color="yellow")
+        #### Check if any commands in learned negatives is < LEVENSHTEIN_THRESHOLD --> roll from remaining commands of the one found
         # if prev didn't work: check for negative associations and roll a remaining command
         # if already associated, the llm should have selected it last time and would select it again most likely
         if command is None:
@@ -209,6 +213,7 @@ class dog_trainer:
                     command = random.choice(self.COMMANDS)
                     self._print(f"Found a close prompt with negative association: {data} -> {command}. But all commands have a negative association, rolling randomly...", color="yellow")
                     self._print(f"Rolled command: {command}", color="lightgreen")
+        #### Query LLM for command
         # if prev didn't work: ask llm for command
         if command is None:
             self._print("Asking language model for command...")
@@ -227,6 +232,7 @@ class dog_trainer:
                 sleep(2)
                 return
             self._print("Language model returned: " + command)
+        #### Check if exact match in negative commands --> reroll from remaining commands if the case
         # when the current command has a negative association with the prompt
         if command in self.learned_negatives[data]:
             old_command = command
@@ -240,6 +246,7 @@ class dog_trainer:
                 self._print(f"Selecting from the remaining commands: {available_commands}")
                 command = random.choice(available_commands)
             self._print(f"Command reroll: {old_command} -> {command}", color="lightgreen")
+        #### If error in command selection, cancel training step
         if command not in self.COMMANDS or command is None:
             self._print("Command not recognized. Cancelling training step...", color="red")
             self.led.clear_led_all()
