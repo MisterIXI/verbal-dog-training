@@ -166,7 +166,7 @@ class dog_trainer:
         # set all to lower case
         data = data.lower()
         # filter out all characters besides alphanumeric, whitespace and umlauts with regex
-        data = re.sub(r'[^\w äöü]', '', data)
+        data = re.sub(r'[^\w äöüß]', '', data)
         if data is None or data == "":
             self._print("No voice input received. Cancelling training step...")
             self.led.start_breathing_color(0.25, self.led.RED, self.led.OFF)
