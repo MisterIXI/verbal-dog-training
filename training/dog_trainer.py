@@ -29,6 +29,9 @@ class dog_trainer:
         actions.Action.hinlegen,
         actions.Action.schütteln,
         actions.Action.spielen,
+        actions.Action.drehen,
+        actions.Action.springen,
+        actions.Action.tanzen,
     ]]
     def __init__(self, print_callback: callable, sr_model: str, state_callback: callable, dog_controller: str) -> None:
         print("Commands: ", self.COMMANDS)
