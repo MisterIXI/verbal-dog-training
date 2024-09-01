@@ -13,6 +13,16 @@ import json
 import os
 from collections import defaultdict
 
+COLOR_CODES = {
+        "white": "\033[97m",
+        "red": "\033[91m",
+        "lightgreen": "\033[92m",
+        "yellow": "\033[93m",
+        "blue": "\033[94m",
+        "magenta": "\033[95m",
+        "cyan": "\033[96m",
+        "reset": "\033[0m"
+}
 # import TKinter as tk
 class MainUI(ctk.CTk):
     DD_WIDTH = 200
@@ -20,7 +30,8 @@ class MainUI(ctk.CTk):
     FONT_SIZE = 20
     PAD_SMALL = 5
     PAD_LARGE = 10
-    KEEP_MAX_MESSAGES = 500
+    KEEP_MAX_MESSAGES = 100
+    KILL_MESSAGE_COUNT = 30
     def __init__(self):
         super().__init__()
         self.dog_trainer: dog_trainer = None
@@ -30,6 +41,11 @@ class MainUI(ctk.CTk):
         self.current_labels = []
         self._epoch = time.time()
         self.output = ""
+        self.message_queue_flag = th.Event()
+        self.message_queue = []
+        self.scroll_queued: bool = False
+        self.print_thread = th.Thread(target=self.printer_loop)
+        self.print_thread.start()
 
     def setup_main_ui(self):
         curr_row:int = 0
@@ -236,7 +252,7 @@ class MainUI(ctk.CTk):
         if self.dog_trainer.loaded["DC"]:
             self.dog_trainer.dc.set_action(Action[self.dd_action_selection.get()])
     
-    def print_output(self, text: str, source: str = "UI", color="white"):
+    def print_with_label(self, text: str, source: str = "UI", color="white"):
         if not self.winfo_exists():
             print("Tried to print to a non-existing window.")
             return
@@ -247,16 +263,42 @@ class MainUI(ctk.CTk):
         label = ctk.CTkLabel(self.sb_output, text=output, font=("Arial", self.FONT_SIZE), text_color=color, justify="left")
         # label.bind("<Configure>", lambda e: label.configure(wraplength=self.sb_output.winfo_width()))
         label.configure(wraplength=self.sb_output.winfo_width())
+        # if self.current_labels:
+        #     label.pack(side=ctk.TOP, anchor="w", before=self.current_labels[-1])
+        # else:
         label.pack(side=ctk.TOP, anchor="w")
         self.printed_output.append(label)
         self.current_labels.append(label)
         self.output += output + "\n"
-        print(output)
+        if color != "white" and color in COLOR_CODES:
+            print(f"{COLOR_CODES[color]}{output}{COLOR_CODES['reset']}")
+        else:
+            print(output)
         if len(self.current_labels) > self.KEEP_MAX_MESSAGES:
-            old_label = self.current_labels.pop(0)
-            old_label.forget()
-            old_label.destroy()
-        self.after(50,self.sb_output._parent_canvas.yview_moveto, 1.0)
+            messages_to_kill = self.current_labels[:self.KILL_MESSAGE_COUNT]
+            self.current_labels = self.current_labels[self.KILL_MESSAGE_COUNT:]
+            for message in messages_to_kill:
+                message.forget()
+                message.destroy()
+            self.after(10,self.sb_output._parent_canvas.yview_moveto, 0.0)
+            # self.sb_output._parent_canvas.yview_moveto(0.0)
+        self.after(10,self.sb_output._parent_canvas.yview_moveto, 1.0)
+        # self.sb_output._parent_canvas.yview_moveto(1.0)
+    
+    def printer_loop(self):
+        while True:
+            self.message_queue_flag.wait()
+            self.message_queue_flag.clear()
+            while len(self.message_queue) > 0:
+                text, source, color = self.message_queue.pop(0)
+                self.print_with_label(text, source, color)
+                
+    
+    def print_output(self, text: str, source: str = "UI", color="white"):
+        self.message_queue.append((text, source, color))
+        self.message_queue_flag.set()
+        # self.after(50, self.sb_output._parent_canvas.yview_moveto, 1.0)
+        # self.after(50,self.sb_output._parent_canvas.yview_moveto, 1.0)
         
     def update_dog_state_text(self, state: text):
         if state == "idle":
