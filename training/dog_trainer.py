@@ -170,10 +170,10 @@ class dog_trainer:
         if command is None or command == "":
             self._print("No voice input received. Cancelling training step...")
             self.led.start_breathing_color(0.25, self.led.RED, self.led.OFF)
-            sleep(3)
+            sleep(2)
             self.trainer_state_update("Idle", "lightgreen")
             self.led.clear_led_all()
-            sleep(2)
+            # sleep(2)
             return
         self._print("Voice recognition finished.")
         self._print("Recognized: " + command,color="lightgreen")
@@ -304,11 +304,11 @@ class dog_trainer:
             self.led.start_breathing_color(0.25, self.led.GREEN, self.led.OFF)
         else:
             self.led.start_breathing_color(0.25, self.led.RED, self.led.OFF)
-        sleep(3)
+        sleep(2)
         self.led.clear_led_all()
         self.trainer_state_update("Idle", "lightgreen")
         self._print(f"Total positives: {self.total_positives}, Total negatives: {self.total_negatives}", color="lightgreen")
-        sleep(2)
+        # sleep(2)
     
     def trainer_state_update(self, state: str, color: str = "white"):
         if self.trainer_state_cb is not None:
