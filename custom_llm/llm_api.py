@@ -14,18 +14,19 @@ class LLM_API:
         self.grammar = self.build_grammar(commands, self.obfuscate_names)
         self._print("Grammar: " + self.grammar)
         # self.print_cb("Grammar: " + self.grammar)
-        self.context = {}
         self.commands = commands
         self.preprompt = self._get_preprompt()
-        for i in range(5):
-            # add 5 random context entries
-            a = random.choice(commands)
-            b = random.choice(commands)
-            self.add_context(a, b, a == b)
+        # for i in range(5):
+        #     # add 5 random context entries
+        #     a = random.choice(commands)
+        #     b = random.choice(commands)
+        #     self.add_context(a, b, a == b)
         self.is_running = True
         self.prompt_event = th.Event()
         self.data_ready = th.Event()
         self.prompt_text = ""
+        self.positive_context = {}
+        self.negative_context = {}
 
     def _print(self, text: str, source: str = "LLM_API", color="white"):
         self.print_callback(text, source, color)
@@ -47,19 +48,19 @@ class LLM_API:
             x += "\"\n"
         return x
 
-    def add_context(self, prompt: str, command: str, correct: bool) -> None:
-        self.context[prompt] = (command, correct)
 
     def stop(self):
         self.is_running = False
         self.prompt_event.set()
 
-    def trigger_prompt(self, prompt: str):
+    def trigger_prompt(self, prompt: str, positive_context: dict, negative_context: dict):
         self.prompt_text = prompt
+        self.positive_context = positive_context
+        self.negative_context = negative_context
         self.prompt_event.set()
 
     def test_if_running(self) -> bool:
-        payload = self._create_payload("", {}, "test", print_prompt=False)
+        payload = self._create_payload("", "test", print_prompt=False)
         try:
             response = requests.post(self.url, json=payload)
         except requests.exceptions.ConnectionError:
@@ -82,7 +83,7 @@ class LLM_API:
             self.data_ready.clear()
             self._print("Prompting with: " + self.prompt_text, color="yellow")
             payload = self._create_payload(
-                self.preprompt, self.context, self.prompt_text, print_prompt=True)
+                self.preprompt, self.prompt_text, print_prompt=True)
             start_time = time.time()
             try:
                 response = requests.post(self.url, json=payload)
@@ -109,9 +110,6 @@ class LLM_API:
                 self.data = None
                 self.data_ready.set()
                 raise ValueError("Request failed: " + response.text)
-
-    def _reset_and_fill_context(self):
-        self.context = {}
 
     def _get_preprompt(self, id: int = 3) -> str:
         command_prompt = "The possible commands are: ["
@@ -147,15 +145,17 @@ class LLM_API:
             " + command_prompt + "\n"
             case _:
                 raise ValueError("Invalid id")
-    def _build_context(self, context: dict) -> str:
+    def _build_context(self) -> str:
         context_str = ""
-        for c in context:
-            command, correct = context[c]
-            context_str += f"{{{c}, {command}, {correct}}}" + "\n"
+        for pos in self.positive_context:
+            context_str += f"{{{pos}: {self.positive_context[pos]}: True}}\n"
+        for neg in self.negative_context:
+            for entry in self.negative_context[neg]:
+                context_str += f"{{{neg}: {entry}: False}}\n"
         return context_str
     
-    def _create_payload(self, pre_prompt: str, context: dict, prompt: str, print_prompt: bool = False) -> str:
-        context_str = self._build_context(context)
+    def _create_payload(self, pre_prompt: str, prompt: str, print_prompt: bool = False) -> str:
+        context_str = self._build_context()
         prompt_str = "User: " + prompt + "\n"
         response_str = "Llama: "
         if print_prompt:
@@ -195,4 +195,4 @@ class LLM_API:
         self._print("LLM Prepromt:\n" + self.preprompt)
     
     def print_context(self):
-        self._print("LLM Context:\n" + self._build_context(self.context))
+        self._print("LLM Context:\n" + self._build_context())

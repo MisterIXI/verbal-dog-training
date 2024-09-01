@@ -201,7 +201,7 @@ class dog_trainer:
         if action_str is None:
             self._print("Asking language model for command...")
             self.trainer_state_update("Querying LLM...", "yellow")
-            self.llm.trigger_prompt(command)
+            self.llm.trigger_prompt(command, self.learned_commands, self.learned_negatives)
             self.llm.data_ready.wait()
             self.llm.data_ready.clear()
             action_str = self.llm.data
@@ -285,7 +285,6 @@ class dog_trainer:
         self.led.clear_led_all()
         self.dc.set_action(actions.Action.attention_cancel)
         self._print(f"Feedback: {command} => {action_str} was {self.feedback}")
-        self.llm.add_context(command, action_str, self.feedback)
         if self.feedback:
             if action_str in self.learned_negatives[command]:
                 self.learned_negatives[command].remove(action_str)
