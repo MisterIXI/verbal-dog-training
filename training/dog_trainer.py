@@ -168,7 +168,7 @@ class dog_trainer:
         # filter out all characters besides alphanumeric, whitespace and umlauts with regex
         command = re.sub(r'[^\w äöüß]', '', command)
         if command is None or command == "":
-            self._print("No voice input received. Cancelling training step...")
+            self._print("No voice input received. Cancelling training step...", color="red")
             self.led.start_breathing_color(0.25, self.led.RED, self.led.OFF)
             sleep(2)
             self.trainer_state_update("Idle", "lightgreen")
