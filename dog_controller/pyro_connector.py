@@ -32,7 +32,7 @@ class remote_controller():
     def _pyro_loop(self):
         self.try_to_connect()
         if self.is_connected:
-            self._print("Starting pyro loop")
+            self._print("Starting pyro loop", "DC")
         else:
             self._print("Aborting pyro loop due to failed connection", "DC", "red")
         while self.is_connected:
