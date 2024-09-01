@@ -24,8 +24,7 @@ class t_state(enum.Enum):
 
 class dog_trainer:
     LEVENSHTEIN_THRESHOLD = 5
-    # COMMANDS = [str(action)[7:] for action in actions.Action if action.value > 0]
-    COMMANDS = [str(action)[7:] for action in [
+    Actions = [str(action)[7:] for action in [
         actions.Action.hinlegen,
         actions.Action.schütteln,
         actions.Action.spielen,
@@ -34,7 +33,7 @@ class dog_trainer:
         actions.Action.tanzen,
     ]]
     def __init__(self, print_callback: callable, sr_model: str, state_callback: callable, dog_controller: str) -> None:
-        print("Commands: ", self.COMMANDS)
+        print("Actions: ", self.Actions)
         self.state_callback = state_callback
         self.state = t_state.idle
         self.sr = None
@@ -73,7 +72,7 @@ class dog_trainer:
     def _load_llm(self):
         if self.loaded["LLM"]:
             return
-        self.llm = llm_api.LLM_API(self._print_cb, commands=self.COMMANDS ,obfuscate_names=False)
+        self.llm = llm_api.LLM_API(self._print_cb, commands=self.Actions ,obfuscate_names=False)
         if not self.llm.test_if_running():
             self._print("Language model query could not be sent. Is the server running?", color="red")
             return
@@ -197,22 +196,6 @@ class dog_trainer:
                 self._print(f"Found closest command: {action_str} with distance {lev.distance(command, action_str)}", color="lightgreen")
             else:
                 self._print(f"No command found with distance < {self.LEVENSHTEIN_THRESHOLD}.", color="yellow")
-        #### Check if any commands in learned negatives is < LEVENSHTEIN_THRESHOLD --> roll from remaining commands of the one found
-        # if prev didn't work: check for negative associations and roll a remaining command
-        # if already associated, the llm should have selected it last time and would select it again most likely
-        if action_str is None:
-            self._print("Checking for negative associations...")
-            result = self.find_closest(command, self.learned_negatives.keys())
-            if result is not None:
-                available_commands = [com for com in self.COMMANDS if com not in self.learned_negatives[result]]
-                if len(available_commands) > 0:
-                    action_str = random.choice(available_commands)
-                    self._print(f"Found a close prompt with negative association: {command} -> {action_str}. Rolling from the remaining pool: {available_commands}.", color="yellow")
-                    self._print(f"Rolled command: {action_str}", color="lightgreen")
-                else:
-                    action_str = random.choice(self.COMMANDS)
-                    self._print(f"Found a close prompt with negative association: {command} -> {action_str}. But all commands have a negative association, rolling randomly...", color="yellow")
-                    self._print(f"Rolled command: {action_str}", color="lightgreen")
         #### Query LLM for command
         # if prev didn't work: ask llm for command
         if action_str is None:
@@ -222,32 +205,29 @@ class dog_trainer:
             self.llm.data_ready.wait()
             self.llm.data_ready.clear()
             action_str = self.llm.data
+            self._print("Language model returned: " + action_str)
             if action_str is None:
                 # when llm errored out
-                self._print("Language model errored out. Cancelling training step...")
-                self.led.start_breathing_color(0.25, self.led.RED, self.led.OFF)
-                sleep(3)
-                self.trainer_state_update("Idle", "lightgreen")
-                self.led.clear_led_all()
-                sleep(2)
-                return
-            self._print("Language model returned: " + action_str)
-        #### Check if exact match in negative commands --> reroll from remaining commands if the case
-        # when the current command has a negative association with the prompt
-        if action_str in self.learned_negatives[command]:
-            old_command = action_str
-            self._print("Command is in negative list. Rerolling...", color="red")
-            available_commands = [com for com in self.COMMANDS if com not in self.learned_negatives[command]]
-            # if no commands are available, roll randomly
-            if len(available_commands) == 0:
-                self._print("No non-negative commands available. Rolling completely at random...", color="red")
-                action_str = random.choice(self.COMMANDS)
+                self._print("Language model returned None. Rolling randomly...", color="yellow")
+                action_str = random.choice(self.Actions)
+        # security random roll
+        if action_str is None:
+            action_str = random.choice(self.Actions)
+            self._print("All steps didn't select an action. Rolling randomly...", color="red")
+        #### Check if any commands in learned negatives is < LEVENSHTEIN_THRESHOLD --> roll from remaining commands of the one found
+        closest_negative = self.find_closest(command, self.learned_negatives.keys())
+        if closest_negative is not None and action_str in self.learned_negatives[closest_negative]:
+            available_actions = [com for com in self.Actions if com not in self.learned_negatives[closest_negative]]
+            if len(available_actions) > 0:
+                action_str = random.choice(available_actions)
+                self._print(f"Found a close prompt with negative association: {command} -> {closest_negative}.\nRolling from the remaining pool: {available_actions}.", color="yellow")
+                self._print(f"Rolled command: {action_str}", color="lightgreen")
             else:
-                self._print(f"Selecting from the remaining commands: {available_commands}")
-                action_str = random.choice(available_commands)
-            self._print(f"Command reroll: {old_command} -> {action_str}", color="lightgreen")
+                action_str = random.choice(self.Actions)
+                self._print(f"Found a close prompt with negative association: {command} -> {closest_negative}.\nBut all commands have a negative association, rolling randomly...", color="yellow")
+                self._print(f"Rolled command: {action_str}", color="lightgreen")
         #### If error in command selection, cancel training step
-        if action_str not in self.COMMANDS or action_str is None:
+        if action_str not in self.Actions or action_str is None:
             self._print("Command not recognized. Cancelling training step...", color="red")
             self.led.clear_led_all()
             self.trainer_state_update("Idle", "lightgreen")
