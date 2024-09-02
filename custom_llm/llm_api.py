@@ -16,6 +16,12 @@ class LLM_API:
         # self.print_cb("Grammar: " + self.grammar)
         self.commands = commands
         self.preprompt = self._get_preprompt()
+        self.general_context = []
+        for action in commands:
+            self.general_context.append("{" + action + ": " + action + ": True}")
+            for other_action in commands:
+                if other_action != action:
+                    self.general_context.append("{" + action + ": " + other_action + ": False}")
         # for i in range(5):
         #     # add 5 random context entries
         #     a = random.choice(commands)
@@ -147,6 +153,8 @@ class LLM_API:
                 raise ValueError("Invalid id")
     def _build_context(self) -> str:
         context_str = ""
+        for entry in self.general_context:
+            context_str += entry + "\n"
         for pos in self.positive_context:
             context_str += f"{{{pos}: {self.positive_context[pos]}: True}}\n"
         for neg in self.negative_context:
