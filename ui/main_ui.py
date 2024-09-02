@@ -319,7 +319,6 @@ class MainUI(ctk.CTk):
             "neg_count": self.dog_trainer.total_negatives,
             "positives": self.dog_trainer.learned_commands,
             "negatives": self.dog_trainer.learned_negatives,
-            "llm_context": self.dog_trainer.llm.context,
         }
         # write to file (filename: YYYYMMDD_HHMMSS_training_data.json)
         filename = f"{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}_training_data.json"
@@ -348,7 +347,6 @@ class MainUI(ctk.CTk):
         # make sure the learned_negatives is the defaultdict[str, list] type
         self.dog_trainer.learned_negatives = defaultdict(list)
         self.dog_trainer.learned_negatives.update(data["negatives"])
-        self.dog_trainer.llm.context = data["llm_context"]
         self.print_output("Training data loaded.", color="lightgreen")
     
     def load_data_filenames(self, _click=None):
